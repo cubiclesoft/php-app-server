@@ -1,0 +1,12 @@
+*.icns
+*.tar.gz
+/www/*
+!/www/README.md
+/installers/win-innosetup/Output/
+/installers/win-innosetup/php-win-32/*
+!/installers/win-innosetup/php-win-32/README.md
+/installers/win-innosetup/php-win-64/*
+!/installers/win-innosetup/php-win-64/README.md
+/installers/win-wix/*.msi
+/installers/win-wix/*.wxs
+!/installers/win-wix/yourapp.wxs

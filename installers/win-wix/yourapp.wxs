@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+	<!--
+	Basic WiX wrapper script for Inno Setup.  Requires a valid Inno Setup executable with /MSI support.  See README.md for more information.
+	(C) 2018 CubicleSoft.  All Rights Reserved.
+	-->
+
+	<!-- Adjust these defines for your app. -->
+	<?define BusinessName = "Your Business or Name" ?>
+	<?define BusinessURL = "http://www.yourwebsite.com/" ?>
+	<?define AppName = "Your App" ?>
+	<?define AppVer = "1.0" ?>
+	<?define AppURL = "http://www.yourwebsite.com/product/" ?>
+	<?define AppCopyright = "(C) 2018 Your Business or Name" ?>
+	<?define SupportURL = "http://www.yourwebsite.com/contact/" ?>
+	<?define SourceSetupFile = "..\win-innosetup\Output\$(var.AppName)-$(var.AppVer).exe" ?>
+	<?define UpgradeGUID = "YOUR_UPGRADE_GUID" ?>
+
+	<!-- There shouldn't generally be any need to modify the rest of this file. -->
+	<?define DestSetupFile = "setup-$(var.UpgradeGUID)-$(var.AppVer).exe" ?>
+
+	<Product Id="*" Name="$(var.AppName)" Manufacturer="$(var.BusinessName)" UpgradeCode="$(var.UpgradeGUID)" Language="1033" Version="$(var.AppVer)">
+		<Package Id="*" Keywords="Installer" Description="$(var.BusinessName) $(var.AppName) $(var.AppVer) Installer" Comments="$(var.AppCopyright)" Manufacturer="$(var.BusinessName)" InstallerVersion="100" Compressed="yes" />
+
+		<Media Id="1" Cabinet="media1.cab" EmbedCab="yes" />
+
+		<Directory Id="TARGETDIR" Name="SourceDir">
+			<Directory Id="TempFolder">
+				<Directory Id="INSTALLLOCATION" Name="~_tmpdir">
+					<Component Id="MainComponent" DiskId="1" Guid="*">
+						<File Id="MainInstaller" Name="$(var.DestSetupFile)" Source="$(var.SourceSetupFile)" />
+					</Component>
+				</Directory>
+			</Directory>
+		</Directory>
+
+		<Feature Id="InstallFeature" Title="Install Feature" Level="1">
+			<ComponentRef Id="MainComponent" />
+		</Feature>
+
+		<!-- Uninstaller. -->
+		<Property Id="UNINSTALLINNOSETUP">
+			<RegistrySearch Id="UninstallInnoSetup" Root="HKLM" Key="SOFTWARE\Inno Setup MSIs\$(var.UpgradeGUID)" Type="raw" />
+		</Property>
+
+		<SetProperty Id="RunWrapUninstall_UILevel_2" Value='"[UNINSTALLINNOSETUP]" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /RESTARTEXITCODE=0 /MSI' Before="RunWrapUninstall_UILevel_2" Sequence="execute" />
+		<SetProperty Id="RunWrapUninstall_UILevel_3_4" Value='"[UNINSTALLINNOSETUP]" /SILENT /SUPPRESSMSGBOXES /NORESTART /RESTARTEXITCODE=0 /MSI' Before="RunWrapUninstall_UILevel_3_4" Sequence="execute" />
+		<SetProperty Id="RunWrapUninstall_UILevel_5" Value='"[UNINSTALLINNOSETUP]" /NORESTART /RESTARTEXITCODE=0 /MSI' Before="RunWrapUninstall_UILevel_5" Sequence="execute" />
+
+		<?if $(sys.BUILDARCH) = x64 ?>
+			<CustomAction Id="RunWrapUninstall_UILevel_2" BinaryKey="WixCA" DllEntry="WixQuietExec64" Execute="deferred" Return="check" />
+			<CustomAction Id="RunWrapUninstall_UILevel_3_4" BinaryKey="WixCA" DllEntry="WixQuietExec64" Execute="deferred" Return="check" />
+			<CustomAction Id="RunWrapUninstall_UILevel_5" BinaryKey="WixCA" DllEntry="WixQuietExec64" Execute="deferred" Return="check" />
+		<?else?>
+			<CustomAction Id="RunWrapUninstall_UILevel_2" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Return="check" />
+			<CustomAction Id="RunWrapUninstall_UILevel_3_4" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Return="check" />
+			<CustomAction Id="RunWrapUninstall_UILevel_5" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Return="check" />
+		<?endif?>
+
+		<!-- Installer. -->
+		<CustomAction Id="RunWrapInstall_UILevel_2" Execute="deferred" FileKey="MainInstaller" ExeCommand="/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /RESTARTEXITCODE=0 /MSI=$(var.UpgradeGUID)" HideTarget="no" Impersonate="no" Return="check" />
+		<CustomAction Id="RunWrapInstall_UILevel_3_4" Execute="deferred" FileKey="MainInstaller" ExeCommand="/SILENT /SUPPRESSMSGBOXES /NORESTART /RESTARTEXITCODE=0 /MSI=$(var.UpgradeGUID)" HideTarget="no" Impersonate="no" Return="check" />
+		<CustomAction Id="RunWrapInstall_UILevel_5" Execute="deferred" FileKey="MainInstaller" ExeCommand="/NORESTART /RESTARTEXITCODE=0 /MSI=$(var.UpgradeGUID)" HideTarget="no" Impersonate="no" Return="check" />
+
+		<!-- The uninstaller and installer line to use is selected based on the UILevel.  This allows msiexec to run the installer and uninstaller silently. -->
+		<InstallExecuteSequence>
+			<Custom Action="RunWrapUninstall_UILevel_2" Before="RemoveFiles">UILevel=2 AND (Installed OR UPGRADINGPRODUCTCODE) AND UNINSTALLINNOSETUP</Custom>
+			<Custom Action="RunWrapUninstall_UILevel_3_4" Before="RemoveFiles">(UILevel=3 OR UILevel=4) AND (Installed OR UPGRADINGPRODUCTCODE) AND UNINSTALLINNOSETUP</Custom>
+			<Custom Action="RunWrapUninstall_UILevel_5" Before="RemoveFiles">UILevel=5 AND (Installed OR UPGRADINGPRODUCTCODE) AND UNINSTALLINNOSETUP</Custom>
+
+			<Custom Action="RunWrapInstall_UILevel_2" After="InstallFiles">UILevel=2 AND (NOT Installed OR UPGRADINGPRODUCTCODE)</Custom>
+			<Custom Action="RunWrapInstall_UILevel_3_4" After="InstallFiles">(UILevel=3 OR UILevel=4) AND (NOT Installed OR UPGRADINGPRODUCTCODE)</Custom>
+			<Custom Action="RunWrapInstall_UILevel_5" After="InstallFiles">UILevel=5 AND (NOT Installed OR UPGRADINGPRODUCTCODE)</Custom>
+
+			<!-- Uncomment the following if the installer or uninstaller require a reboot. -->
+			<!-- <ScheduleReboot After="InstallFinalize" /> -->
+		</InstallExecuteSequence>
+
+		<Property Id="ARPURLUPDATEINFO" Value="$(var.BusinessURL)" />
+		<Property Id="ARPURLINFOABOUT" Value="$(var.AppURL)" />
+		<Property Id="ARPHELPLINK" Value="$(var.SupportURL)" />
+	</Product>
+</Wix>

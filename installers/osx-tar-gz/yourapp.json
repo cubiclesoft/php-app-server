@@ -1,0 +1,12 @@
+{
+	"business_name": "Your Business or Name",
+	"business_url": "http://www.yourwebsite.com/",
+	"app_name": "Your App",
+	"app_ver": "1.0",
+	"app_url": "http://www.yourwebsite.com/product/",
+	"app_copyright": "(C) 2018 Your Business or Name",
+	"support_url": "http://www.yourwebsite.com/contact/",
+	"vendor": "your-business",
+	"app_category": "",
+	"user_dock_icon": false
+}

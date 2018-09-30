@@ -1,0 +1,33 @@
+<?php
+	// PHP App Startup Baseline.
+	// (C) 2018 CubicleSoft.  All Rights Reserved.
+
+	if (!isset($_SERVER["argc"]) || !$_SERVER["argc"])
+	{
+		echo "This file is intended to be run from the command-line.";
+
+		exit();
+	}
+
+	// Temporary root.
+	$rootpath = str_replace("\\", "/", dirname(__FILE__));
+
+	require_once $rootpath . "/support/cli.php";
+	require_once $rootpath . "/support/process_helper.php";
+	require_once $rootpath . "/support/pas_functions.php";
+
+	// App and server options.  Change these as desired.  Port 0 is the default to dynamically assign an available port.
+	$options = array(
+		"business" => "CubicleSoft",
+		"appname" => false,
+		"host" => "127.0.0.1",
+		"port" => 0,
+		"quitdelay" => 6
+	);
+
+	// Start the server.
+	$result = PAS_StartServer($options);
+
+	// Start the user's default web browser.
+	PAS_LaunchWebBrowser($result["url"]);
+?>
