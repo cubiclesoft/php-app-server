@@ -1,11 +1,11 @@
-Instructions
-============
+Linux Installer Instructions
+============================
 
-This directory contains a packaging program (package.php) and a configuration file (package.json) for preparing tar-gzipped (.tar.gz) installable packages for Linux.
+This directory contains a packaging program (package.php) and a configuration file (yourapp.json) for preparing tar-gzipped (.tar.gz) installable packages for Linux.
 
 Open `install-support/php-nix-install.sh` in a text editor and adjust the system dependencies as needed (e.g. add any extra PHP extensions that are required by the application).
 
-Open `package.json` in a text editor and fill out the various values.  Most of the fields should be obvious as to what they are for.  However, the following keys are less obvious:
+Rename and open `yourapp.json` in a text editor and fill out the various values.  Most of the fields should be obvious as to what they are for.  However, the following keys are less obvious:
 
 * vendor - May only contain A-Z, a-z, and hyphens.  Required by the `xdg-utils` package to avoid name conflicts.
 * app_categories - A semicolon separated list from the standard categories in the [freedesktop.org category registry](https://specifications.freedesktop.org/menu-spec/menu-spec-latest.html#category-registry).

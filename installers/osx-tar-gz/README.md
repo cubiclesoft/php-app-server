@@ -1,9 +1,9 @@
-Instructions
-============
+Mac OSX Installer Instructions
+==============================
 
-This directory contains a packaging program (package.php) and a configuration file (package.json) for preparing tar-gzipped (.tar.gz) installable packages for Mac OSX.
+This directory contains a packaging program (package.php) and a configuration file (yourapp.json) for preparing tar-gzipped (.tar.gz) installable packages for Mac OSX.
 
-Open `package.json` in a text editor and fill out the various values.  Most of the fields should be obvious as to what they are for.  However, the following keys are less obvious:
+Rename and open `yourapp.json` in a text editor and fill out the various values.  Most of the fields should be obvious as to what they are for.  However, the following keys are less obvious:
 
 * vendor - May only contain A-Z, a-z, and hyphens.  Required by the `Info.plist` to avoid name conflicts.
 * app_category - A valid `LSApplicationCategoryType` from the list on [developer.apple.com](https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/LaunchServicesKeys.html#//apple_ref/doc/uid/TP40009250-SW8).

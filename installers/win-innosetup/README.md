@@ -1,5 +1,5 @@
-Instructions
-============
+Windows EXE Instructions
+========================
 
 This directory contains an Inno Setup script (.iss) and tools for preparing EXE-based installer packages for Windows.
 

@@ -1,5 +1,5 @@
-Instructions
-============
+Windows MSI Instructions
+========================
 
 This directory contains a WiX script (.wxs), a GUID generator, and a couple of batch files for preparing MSI-based installer packages for Windows.
 

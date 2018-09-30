@@ -3,7 +3,7 @@ PHP App Server
 
 Create lightweight, installable applications written in HTML, CSS, Javascript, and PHP for the Windows, Mac, and Linux desktop operating systems.
 
-(installer screenshot)
+![Screenshot of a generated installer on Windows](https://user-images.githubusercontent.com/1432111/46253522-88f58200-c432-11e8-97c0-8337b2d181af.png)
 
 What can be created with PHP App Server are real, installable software applications that take a fraction of the time to create when compared to traditional desktop application development.  Go from idea/concept to full deployment in 1/10th the time and support every major desktop OS with just one code base.
 
