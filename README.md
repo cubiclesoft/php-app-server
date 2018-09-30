@@ -85,7 +85,7 @@ Rename or copy the `index.php` file to `api.php` and reload the page.  Now `api.
 Dual Document Roots
 -------------------
 
-Installed software applications cannot write to 'www'.  This is because applications are usually installed by a privileged user on the system while the person running the software typically does not have sufficient privileges to write to the 'www' directory.  This is an important consideration to keep in mind while developing a software application using PHP App Server.  Fortunately, there is a solution to this problem already built into the server:  Dual document roots.
+Installed software applications cannot write to 'www'.  Applications are usually installed by a privileged user on the system but the person running the software will generally not have sufficient permissions to write to the 'www' directory.  This is an important consideration to keep in mind while developing a software application using PHP App Server.  Fortunately, there is a solution to this problem already built into the server:  Dual document roots.
 
 When PHP code is executing from the application's 'www' directory, it has access to four `$_SERVER` variables that are passed in by and are unique to the PHP App Server environment:
 
