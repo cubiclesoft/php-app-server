@@ -82,7 +82,7 @@
 				$srcwidth = $srcheight;
 			}
 
-			// Prepare icons in decending size order.
+			// Prepare icons in descending size order.
 			$icons = array();
 			$types = array("ic10", "ic09", "ic14", "ic08", "ic13", "ic07", "icp6", "ic12", "icp5", "ic11", "icp4");
 			foreach ($types as $type)
