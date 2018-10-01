@@ -4,7 +4,7 @@
 
 	class DirHelper
 	{
-		static function Delete($path, $recursive = true, $exclude = array())
+		public static function Delete($path, $recursive = true, $exclude = array())
 		{
 			$path = rtrim(str_replace("\\", "/", $path), "/");
 
@@ -26,7 +26,7 @@
 			}
 		}
 
-		static function Copy($srcdir, $destdir, $recurse = true, $exclude = array())
+		public static function Copy($srcdir, $destdir, $recurse = true, $exclude = array())
 		{
 			@mkdir($destdir, 0777, true);
 
@@ -61,7 +61,7 @@
 			}
 		}
 
-		static function SetPermissions($path, $dirowner, $dirgroup, $dirperms, $fileowner, $filegroup, $fileperms, $recurse = true, $exclude = array())
+		public static function SetPermissions($path, $dirowner, $dirgroup, $dirperms, $fileowner, $filegroup, $fileperms, $recurse = true, $exclude = array())
 		{
 			$path = rtrim(str_replace("\\", "/", $path), "/");
 
