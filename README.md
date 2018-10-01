@@ -11,6 +11,8 @@ What can be created with PHP App Server are real, installable software applicati
 
 PHP App Server is a fully-featured and extensible web server written in PHP with custom features specially designed to be used in a traditional desktop OS environment.  When the user runs the software via their Start menu, application launcher, etc., the software starts the server and then launches the user's preferred web browser to access the application.  PHP powers the backend while the web browser handles all the nitty-gritty details of displaying the user interface.  The ready-made installer scripts simplify the process of creating final release packages for delivery to your user's computer systems.
 
+[![Donate](https://cubiclesoft.com/res/donate-shield.png)](https://cubiclesoft.com/donate/)
+
 Features
 --------
 
@@ -125,7 +127,7 @@ The server assumes that the filename is a part of the class name.  Whatever the 
 
 The variables available to normal PHP scripts are also available to extensions via the global `$baseenv` variable (e.g. `$baseenv["DOCUMENT_ROOT_USER"]` and `$baseenv["PAS_USER_FILES"]`).  Please do not alter the `$baseenv` values as that will negatively affect the rest of the application.
 
-Always use the `ProcessHelper::StartProcess()` static function when starting external, long-running processes.
+Always use the `ProcessHelper::StartProcess()` static function when starting external, long-running processes inside an extension.  The [ProcessHelper](https://github.com/cubiclesoft/php-misc/blob/master/docs/process_helper.md) class is designed to start non-blocking processes in the background across all platforms.
 
 Pre-Installer Tasks
 -------------------
