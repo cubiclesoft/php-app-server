@@ -5,7 +5,7 @@ This directory contains an Inno Setup script (.iss) and tools for preparing EXE-
 
 Note that Windows is required for these instructions.  Fortunately, Microsoft provides free, temporary [virtual machines of the Windows OS](https://developer.microsoft.com/en-us/windows/downloads/virtual-machines) for a variety of virtual machine software products, including VirtualBox so that you can run whatever OS you prefer.
 
-First, for the generated installer to work properly on target systems, put 32-bit (x86) and/or 64-bit (x64) PHP binaries into the appropriate `php-win-XX` directory.  Also, create or adjust `php.ini` for the application's needs (e.g. `extension_dir = "ext"`).  In general, don't use the "Non Thread Safe" versions available on [windows.php.net](https://windows.php.net/download/).  While not necessarily required, trimming unnecessary DLLs helps reduce the final package size.
+First, for the generated installer to work properly on target systems, put 32-bit (x86) and/or 64-bit (x64) PHP binaries into the appropriate `php-win-XX` directory.  Also, create or adjust `php.ini` for the application's needs (e.g. uncomment the line `extension_dir = "ext"` and then whatever extensions are used by the application).  In general, don't use the "Non Thread Safe" versions available on [windows.php.net](https://windows.php.net/download/).  While not necessarily required, trimming unnecessary DLLs can dramatically reduce the final package size.
 
 Next, run `prepare-php.bat` on a Windows computer.  This step prepares the PHP binaries from the previous step to be deployed onto Windows systems.
 
