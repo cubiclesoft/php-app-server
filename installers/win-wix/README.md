@@ -11,7 +11,7 @@ First, download and install the latest [WiX toolset](http://wixtoolset.org/) sof
 
 Also generate a GUID using the following command line:
 
-`uuidgen.exe -c`
+`uuidgen.exe -C`
 
 Next, rename the `yourapp.wxs` file to your application name.  This helps prevent accidental overwrites when upgrading the software in the future.
 
