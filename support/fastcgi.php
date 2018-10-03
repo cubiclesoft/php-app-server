@@ -222,6 +222,7 @@
 			$request->role = (int)$role;
 			$request->flags = ($keepalive ? 0x01 : 0x00);
 			$request->stdinopen = true;
+			$request->dataopen = ($request->role === self::ROLE_FILTER);
 			$request->stdout = "";
 			$request->stdoutcompleted = false;
 			$request->stderr = "";
@@ -346,6 +347,37 @@
 			}
 
 			if ($x < $y || !$y)  $this->WriteRecord(self::RECORD_TYPE_STDERR, $requestid, (string)substr($data, $x));
+
+			return array("success" => true);
+		}
+
+		// Client only.
+		public function IsDataOpen($requestid)
+		{
+			if ($this->fp === false)  return false;
+			if (!$this->client)  return false;
+			if (!isset($this->requests[$requestid]))  return false;
+
+			return $this->requests[$requestid]->dataopen;
+		}
+
+		// Client only.
+		public function SendData($requestid, $data)
+		{
+			if ($this->fp === false)  return array("success" => false, "error" => self::FCGITranslate("Connection not established."), "errorcode" => "no_connection");
+			if (!$this->client)  return array("success" => false, "error" => self::FCGITranslate("The SendStdin() function is only available in client mode."), "errorcode" => "client_mode_only");
+			if (!isset($this->requests[$requestid]))  return array("success" => false, "error" => self::FCGITranslate("The specified request ID does not exist."), "errorcode" => "invalid_request_id");
+			if (!$this->requests[$requestid]->dataopen)  return array("success" => false, "error" => self::FCGITranslate("The specified request ID has already closed the data channel."), "errorcode" => "data_closed");
+
+			$y = strlen($data);
+			for ($x = 0; $x + 65535 < $y; $x += 65535)
+			{
+				$this->WriteRecord(self::RECORD_TYPE_DATA, $requestid, substr($data, $x, 65535));
+			}
+
+			if ($x < $y || !$y)  $this->WriteRecord(self::RECORD_TYPE_DATA, $requestid, (string)substr($data, $x));
+
+			if (!$y)  $this->requests[$requestid]->dataopen = false;
 
 			return array("success" => true);
 		}
@@ -550,6 +582,8 @@
 
 						$request = $this->requests[$record["reqid"]];
 
+						$request->stdinopen = false;
+						$request->dataopen = false;
 						$request->stdoutcompleted = true;
 						$request->stderrcompleted = true;
 						$request->ended = true;
