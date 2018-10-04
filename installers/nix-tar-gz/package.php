@@ -15,6 +15,7 @@
 	// Determine the OS.
 	$os = php_uname("s");
 	$windows = (strtoupper(substr($os, 0, 3)) == "WIN");
+	$mac = (strtoupper(substr($os, 0, 6)) == "DARWIN");
 
 	if ($windows)  echo "This script might not work as expected on Windows.  Running this script via a reasonable Bash port (e.g. git bash) is recommended for tar/gzip support.\n\n";
 
@@ -79,7 +80,7 @@
 	echo "Generating " . $appname . "-" . $packageinfo["app_ver"] . "-linux.tar.gz...\n";
 	chdir($rootpath);
 	@unlink($appname . "-" . $packageinfo["app_ver"] . "-linux.tar.gz");
-	system("tar czvf " . escapeshellarg($appname . "-" . $packageinfo["app_ver"] . "-linux.tar.gz") . " --owner=0 --group=0 " . escapeshellarg($appname . "-" . $packageinfo["app_ver"] . "/"));
+	system("tar czvf " . escapeshellarg($appname . "-" . $packageinfo["app_ver"] . "-linux.tar.gz") . ($mac ? " " : " --owner=0 --group=0 ") . escapeshellarg($appname . "-" . $packageinfo["app_ver"] . "/"));
 
 	echo "Cleaning up...\n";
 	DirHelper::Delete($stagingpath);
