@@ -598,7 +598,7 @@
 			if ($client->appdata["fcgi"]["conn"]->NeedsWrite())  $writefps["fcgi_send_" . $id] = $client->appdata["fcgi"]["fp"];
 
 			$request = $client->appdata["fcgi"]["request"];
-			if ((!$request->stdoutcompleted || !$request->stderrcompleted) && strlen($client->writedata) + strlen($request->stdout) < 262144)  $readfps["fcgi_recv_" . $id] = $client->appdata["fcgi"]["fp"];
+			if (($request->stdoutopen || $request->stderropen) && strlen($client->writedata) + strlen($request->stdout) < 262144)  $readfps["fcgi_recv_" . $id] = $client->appdata["fcgi"]["fp"];
 		}
 
 		$result = @stream_select($readfps, $writefps, $exceptfps, $timeout);
@@ -1080,7 +1080,7 @@
 					if ($result2["success"] && !$request->ended)
 					{
 						$cmd = "ProcessQueues";
-						$read = ((!$request->stdoutcompleted || !$request->stderrcompleted) && strlen($client->writedata) + strlen($request->stdout) < 262144);
+						$read = (($request->stdoutopen || $request->stderropen) && strlen($client->writedata) + strlen($request->stdout) < 262144);
 						$write = $client->appdata["fcgi"]["conn"]->NeedsWrite();
 
 						$result2 = $client->appdata["fcgi"]["conn"]->ProcessQueues($read, $write);
@@ -1153,9 +1153,9 @@
 							}
 
 							// When stdout and stderr are both closed, the response is complete.
-							if ($request->stdoutcompleted && $request->stderrcompleted)  $client->FinalizeResponse();
+							if (!$request->stdoutopen && !$request->stderropen)  $client->FinalizeResponse();
 						}
-						else if ($request->stdoutcompleted && $request->stderrcompleted)
+						else if (!$request->stdoutopen && !$request->stderropen)
 						{
 							// For some reason, both stdout and stderr are closed and no headers were sent.
 							$request->stdout = "";

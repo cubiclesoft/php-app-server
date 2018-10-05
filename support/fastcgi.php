@@ -222,11 +222,11 @@
 			$request->role = (int)$role;
 			$request->flags = ($keepalive ? 0x01 : 0x00);
 			$request->stdinopen = true;
+			$request->stdoutopen = true;
+			$request->stderropen = true;
 			$request->dataopen = ($request->role === self::ROLE_FILTER);
 			$request->stdout = "";
-			$request->stdoutcompleted = false;
 			$request->stderr = "";
-			$request->stderrcompleted = false;
 			$request->ended = false;
 
 			$this->requests[$request->id] = $request;
@@ -260,10 +260,20 @@
 		{
 			if ($this->fp === false)  return array("success" => false, "error" => self::FCGITranslate("Connection not established."), "errorcode" => "no_connection");
 			if ($this->client)  return array("success" => false, "error" => self::FCGITranslate("The EndRequest() function is only available in server mode."), "errorcode" => "server_mode_only");
+			if (isset($this->requests[$requestid]) && $this->requests[$requestid]->ended)  return array("success" => false, "error" => self::FCGITranslate("The EndRequest() function has already been called for this request."), "errorcode" => "already_ended");
 
 			// 4 bytes application status, 1 byte protocol status, 3 bytes reserved.
 			$content = pack("N", (int)$appstatus) . chr($protocolstatus) . "\x00\x00\x00";
 			$this->WriteRecord(self::RECORD_TYPE_END_REQUEST, $requestid, $content);
+
+			if (isset($this->requests[$requestid]))
+			{
+				$this->requests[$requestid]->stdinopen = false;
+				$this->requests[$requestid]->stdoutopen = false;
+				$this->requests[$requestid]->stderropen = false;
+				$this->requests[$requestid]->dataopen = false;
+				$this->requests[$requestid]->ended = true;
+			}
 
 			return array("success" => true);
 		}
@@ -284,11 +294,9 @@
 			return array("success" => true);
 		}
 
-		// Client only.
 		public function IsStdinOpen($requestid)
 		{
 			if ($this->fp === false)  return false;
-			if (!$this->client)  return false;
 			if (!isset($this->requests[$requestid]))  return false;
 
 			return $this->requests[$requestid]->stdinopen;
@@ -315,12 +323,21 @@
 			return array("success" => true);
 		}
 
+		public function IsStdoutOpen($requestid)
+		{
+			if ($this->fp === false)  return false;
+			if (!isset($this->requests[$requestid]))  return false;
+
+			return $this->requests[$requestid]->stdoutopen;
+		}
+
 		// Server only.
 		public function SendStdout($requestid, $data)
 		{
 			if ($this->fp === false)  return array("success" => false, "error" => self::FCGITranslate("Connection not established."), "errorcode" => "no_connection");
 			if ($this->client)  return array("success" => false, "error" => self::FCGITranslate("The SendStdout() function is only available in server mode."), "errorcode" => "server_mode_only");
 			if (!isset($this->requests[$requestid]))  return array("success" => false, "error" => self::FCGITranslate("The specified request ID does not exist."), "errorcode" => "invalid_request_id");
+			if (!$this->requests[$requestid]->stdoutopen)  return array("success" => false, "error" => self::FCGITranslate("The specified request ID has already closed stdout."), "errorcode" => "stdout_closed");
 
 			$y = strlen($data);
 			for ($x = 0; $x + 65535 < $y; $x += 65535)
@@ -330,7 +347,17 @@
 
 			if ($x < $y || !$y)  $this->WriteRecord(self::RECORD_TYPE_STDOUT, $requestid, (string)substr($data, $x));
 
+			if (!$y)  $this->requests[$requestid]->stdoutopen = false;
+
 			return array("success" => true);
+		}
+
+		public function IsStderrOpen($requestid)
+		{
+			if ($this->fp === false)  return false;
+			if (!isset($this->requests[$requestid]))  return false;
+
+			return $this->requests[$requestid]->stderropen;
 		}
 
 		// Server only.
@@ -339,6 +366,7 @@
 			if ($this->fp === false)  return array("success" => false, "error" => self::FCGITranslate("Connection not established."), "errorcode" => "no_connection");
 			if ($this->client)  return array("success" => false, "error" => self::FCGITranslate("The SendStderr() function is only available in server mode."), "errorcode" => "server_mode_only");
 			if (!isset($this->requests[$requestid]))  return array("success" => false, "error" => self::FCGITranslate("The specified request ID does not exist."), "errorcode" => "invalid_request_id");
+			if (!$this->requests[$requestid]->stderropen)  return array("success" => false, "error" => self::FCGITranslate("The specified request ID has already closed stderr."), "errorcode" => "stderr_closed");
 
 			$y = strlen($data);
 			for ($x = 0; $x + 65535 < $y; $x += 65535)
@@ -348,14 +376,14 @@
 
 			if ($x < $y || !$y)  $this->WriteRecord(self::RECORD_TYPE_STDERR, $requestid, (string)substr($data, $x));
 
+			if (!$y)  $this->requests[$requestid]->stderropen = false;
+
 			return array("success" => true);
 		}
 
-		// Client only.
 		public function IsDataOpen($requestid)
 		{
 			if ($this->fp === false)  return false;
-			if (!$this->client)  return false;
 			if (!isset($this->requests[$requestid]))  return false;
 
 			return $this->requests[$requestid]->dataopen;
@@ -367,7 +395,7 @@
 			if ($this->fp === false)  return array("success" => false, "error" => self::FCGITranslate("Connection not established."), "errorcode" => "no_connection");
 			if (!$this->client)  return array("success" => false, "error" => self::FCGITranslate("The SendStdin() function is only available in client mode."), "errorcode" => "client_mode_only");
 			if (!isset($this->requests[$requestid]))  return array("success" => false, "error" => self::FCGITranslate("The specified request ID does not exist."), "errorcode" => "invalid_request_id");
-			if (!$this->requests[$requestid]->dataopen)  return array("success" => false, "error" => self::FCGITranslate("The specified request ID has already closed the data channel."), "errorcode" => "data_closed");
+			if (!$this->requests[$requestid]->dataopen)  return array("success" => false, "error" => self::FCGITranslate("The specified request ID has already closed the data channel."), "errorcode" => "data_channel_closed");
 
 			$y = strlen($data);
 			for ($x = 0; $x + 65535 < $y; $x += 65535)
@@ -549,11 +577,14 @@
 						$request->role = $role;
 						$request->flags = $flags;
 						$request->abort = false;
+						$request->stdinopen = true;
+						$request->stdoutopen = true;
+						$request->stderropen = true;
+						$request->dataopen = ($role === self::ROLE_FILTER);
 						$request->params = "";
 						$request->stdin = "";
-						$request->stdincompleted = false;
 						$request->data = "";
-						$request->datacompleted = ($role !== self::ROLE_FILTER);
+						$request->ended = false;
 
 						$this->requests[$request->id] = $request;
 						$this->readyrequests[$request->id] = true;
@@ -584,8 +615,8 @@
 
 						$request->stdinopen = false;
 						$request->dataopen = false;
-						$request->stdoutcompleted = true;
-						$request->stderrcompleted = true;
+						$request->stdoutopen = false;
+						$request->stderropen = false;
 						$request->ended = true;
 						$request->appstatus = unpack("N", substr($record["content"], 0, 4))[1];
 						$request->protocolstatus = ord($record["content"]{4});
@@ -619,9 +650,9 @@
 						if (!isset($this->requests[$record["reqid"]]))  continue;
 
 						$request = $this->requests[$record["reqid"]];
-						if ($request->stdincompleted)  continue;
+						if (!$request->stdinopen)  continue;
 
-						if ($record["content"] === "")  $request->stdincompleted = true;
+						if ($record["content"] === "")  $request->stdinopen = false;
 						else  $request->stdin .= $record["content"];
 
 						$this->readyrequests[$record["reqid"]] = true;
@@ -636,9 +667,9 @@
 						if (!isset($this->requests[$record["reqid"]]))  continue;
 
 						$request = $this->requests[$record["reqid"]];
-						if ($request->stdoutcompleted || $request->ended !== false)  continue;
+						if (!$request->stdoutopen || $request->ended)  continue;
 
-						if ($record["content"] === "")  $request->stdoutcompleted = true;
+						if ($record["content"] === "")  $request->stdoutopen = false;
 						else  $request->stdout .= $record["content"];
 
 						$this->readyrequests[$record["reqid"]] = true;
@@ -653,9 +684,9 @@
 						if (!isset($this->requests[$record["reqid"]]))  continue;
 
 						$request = $this->requests[$record["reqid"]];
-						if ($request->stderrcompleted || $request->ended !== false)  continue;
+						if (!$request->stderropen || $request->ended)  continue;
 
-						if ($record["content"] === "")  $request->stderrcompleted = true;
+						if ($record["content"] === "")  $request->stderropen = false;
 						else  $request->stderr .= $record["content"];
 
 						$this->readyrequests[$record["reqid"]] = true;
@@ -670,9 +701,9 @@
 						if (!isset($this->requests[$record["reqid"]]))  continue;
 
 						$request = $this->requests[$record["reqid"]];
-						if ($request->datacompleted)  continue;
+						if (!$request->dataopen)  continue;
 
-						if ($record["content"] === "")  $request->datacompleted = true;
+						if ($record["content"] === "")  $request->dataopen = false;
 						else  $request->data .= $record["content"];
 
 						$this->readyrequests[$record["reqid"]] = true;
