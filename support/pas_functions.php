@@ -1,20 +1,18 @@
 <?php
 	// PHP App Server support functions.
-	// (C) 2018 CubicleSoft.  All Rights Reserved.
+	// (C) 2019 CubicleSoft.  All Rights Reserved.
 
-	function PAS_LoadServerExtensions()
+	function PAS_LoadServerExtensions($extspath)
 	{
-		global $rootpath;
-
 		$serverexts = array();
-		$dir = opendir($rootpath . "/extensions");
+		$dir = opendir($extspath);
 		if ($dir !== false)
 		{
 			while (($file = readdir($dir)) !== false)
 			{
 				if (substr($file, -4) === ".php")
 				{
-					require_once $rootpath . "/extensions/" . $file;
+					require_once $extspath . "/" . $file;
 
 					$key = substr($file, 0, -4);
 					$classname = "PAS_Extension_" . $key;
@@ -100,6 +98,8 @@
 		if (isset($options["user"]) && is_string($options["user"]))  $cmd .= " " . escapeshellarg("-user=" . $options["user"]);
 		if (isset($options["group"]) && is_string($options["group"]))  $cmd .= " " . escapeshellarg("-group=" . $options["group"]);
 		if (isset($options["quitdelay"]) && $options["quitdelay"] > 0)  $cmd .= " " . escapeshellarg("-quit=" . $options["quitdelay"] * 60);
+		if (isset($options["exts"]) && is_string($options["exts"]))  $cmd .= " " . escapeshellarg("-exts=" . $options["exts"]);
+		if (isset($options["www"]) && is_string($options["www"]))  $cmd .= " " . escapeshellarg("-www=" . $options["www"]);
 
 		// Have the server write the results of its startup sequence to a file, which will contain the URL to point a web browser at on successful startup.
 		$sdir = sys_get_temp_dir();
@@ -164,6 +164,8 @@
 				PAS_DisplayErrorDialog("Server Startup Error", "Unable to start the web server portion of " . $appname . ".  Contact the developer of the application.  Error 104", $sinfo);
 			}
 		}
+
+		$sinfo["procinfo"] = $result;
 
 		return $sinfo;
 	}

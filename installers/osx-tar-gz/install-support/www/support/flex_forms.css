@@ -1,0 +1,150 @@
+div.ff_formwrap div.ff_formwrapinner div.formitem {
+	margin-top: 1.0em;
+}
+
+div.ff_formwrap div.ff_formwrapinner div.formitemtitle {
+	color: #222222;
+	margin-bottom: 0.2em;
+	font-weight: bold;
+}
+
+div.ff_formwrap div.ff_formwrapinner div.formitem div.formitemdata input.text {
+	box-sizing: border-box;
+	width: 100%;
+	font-size: 0.9em;
+	padding: 0.3em;
+	border: 1px solid #BBBBBB;
+}
+
+div.ff_formwrap div.ff_formwrapinner div.formitem div.formitemdata input.text:focus {
+	border: 1px solid #888888;
+}
+
+div.ff_formwrap div.ff_formwrapinner div.formitem div.formitemdata input.text:hover {
+	border: 1px solid #888888;
+}
+
+div.ff_formwrap div.ff_formwrapinner div.formitem div.formitemdata textarea {
+	box-sizing: border-box;
+	width: 100%;
+	font-size: 0.9em;
+	padding: 0.3em;
+	border: 1px solid #BBBBBB;
+	resize: vertical;
+}
+
+div.ff_formwrap div.ff_formwrapinner div.formitem div.formitemdata textarea:focus {
+	border: 1px solid #888888;
+}
+
+div.ff_formwrap div.ff_formwrapinner div.formitem div.formitemdata textarea:hover {
+	border: 1px solid #888888;
+}
+
+div.ff_formwrap div.ff_formwrapinner div.formitem div.formitemdata div.radioitemwrap {
+	margin-left: 1.7em;
+	text-indent: -1.7em;
+	margin-bottom: 0.3em;
+}
+
+div.ff_formwrap div.ff_formwrapinner div.formitem div.formitemdata div.checkboxitemwrap {
+	margin-left: 1.7em;
+	text-indent: -1.7em;
+	margin-bottom: 0.3em;
+}
+
+div.ff_formwrap div.ff_formwrapinner div.formitem div.formitemdata select {
+	box-sizing: border-box;
+	width: 100%;
+	font-size: 0.9em;
+	border: 1px solid #BBBBBB;
+}
+
+div.ff_formwrap div.ff_formwrapinner div.formitem div.formitemdata select:focus {
+	border: 1px solid #888888;
+}
+
+div.ff_formwrap div.ff_formwrapinner div.formitem div.formitemdata select:hover {
+	border: 1px solid #888888;
+}
+
+div.ff_formwrap div.ff_formwrapinner div.formitem div.formitemdata div.staticwrap {
+	margin-left: 0.5em;
+}
+
+div.ff_formwrap div.ff_formwrapinner div.formitem div.formitemdesc {
+	color: #333333;
+	margin-bottom: 0.2em;
+	margin-left: 0.5em;
+	font-size: 0.9em;
+}
+
+div.ff_formwrap div.ff_formwrapinner div.formitem div.formitemresult {
+	margin-left: 0.5em;
+}
+
+div.ff_formwrap div.ff_formwrapinner div.formitem div.formitemresult div.formitemerror {
+	background: url('flex_forms_error.png') 0 0.1em no-repeat;
+	padding-left: 25px;
+	color: #A94442;
+	font-weight: bold;
+}
+
+div.ff_formwrap div.ff_formwrapinner div.fieldtablewrap table td {
+	padding-right: 1.0em;
+	vertical-align: top;
+}
+
+div.ff_formwrap div.ff_formwrapinner div.fieldtablewrap table td.nowrap {
+	white-space: nowrap;
+}
+
+div.ff_formwrap div.ff_formwrapinner div.formsubmit {
+	margin-top: 1.2em;
+}
+
+div.ff_formwrap div.ff_formwrapinner div.formsubmit input {
+	padding: 0.2em 0.5em;
+	font-weight: bold;
+	font-size: 1.0em;
+	color: #1F1F1F;
+}
+
+div.ff_formmessagewrap div.ff_formmessagewrapinner div.message {
+	border: 1px solid transparent;
+	border-radius: 4px;
+	margin-top: 1.0em;
+	padding: 0.5em 0.7em;
+}
+
+div.ff_formmessagewrap div.ff_formmessagewrapinner div.messagesuccess {
+	border-color: #B2DBA1;
+	background-color: #DFF0D8;
+	background-image: linear-gradient(to bottom, #DFF0D8 0px, #C8E5BC 100%);
+	background-repeat: repeat-x;
+	color: #3C763D;
+}
+
+div.ff_formmessagewrap div.ff_formmessagewrapinner div.messagewarning {
+	border-color: #F5E79E;
+	background-color: #FCF8E3;
+	background-image: linear-gradient(to bottom, #FCF8E3 0px, #F8EFC0 100%);
+	background-repeat: repeat-x;
+	color: #8A6D3B;
+}
+
+div.ff_formmessagewrap div.ff_formmessagewrapinner div.messageerror {
+	border-color: #DCA7A7;
+	background-color: #F2DEDE;
+	background-image: linear-gradient(to bottom, #F2DEDE 0px, #E7C3C3 100%);
+	background-repeat: repeat-x;
+	color: #A94442;
+}
+
+div.ff_formmessagewrap div.ff_formmessagewrapinner div.messageinfo {
+	border-color: #9ACFEA;
+	background-color: #D9EDF7;
+	background-image: linear-gradient(to bottom, #D9EDF7 0px, #B9DEF0 100%);
+	background-repeat: repeat-x;
+	color: #31708F;
+}

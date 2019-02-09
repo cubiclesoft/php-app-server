@@ -24,7 +24,7 @@ Features
 * Dual document roots.
 * Access and error logging.
 * Zero configuration.
-* Pre-made boilerplate installer scripts for Windows (EXE and MSI), Mac (.tar.gz), and Linux (.tar.gz) with custom EULA and clean update support.
+* Pre-made boilerplate installer scripts for Windows (EXE and MSI), Mac (.app bundle in a .tar.gz), and Linux (.tar.gz) with custom EULA and clean update support.
 * Tiny installer sizes.  From 85KB (Linux, .tar.gz) up to 10MB (Windows, .exe).  When paying per GB of transfer, every byte counts.
 * Branded to look like your own software application.  Your app's custom icon is placed in the Start menu, application launcher, desktop/dock, etc.
 * Fully isolated, zero conflict software.
@@ -159,13 +159,12 @@ Each platform packaging tool has its own instructions:
 
 * [Windows, EXE](installers/win-innosetup/README.md) - Inno Setup based installer script with specialized support for the MSI build process.
 * [Windows, MSI](installers/win-wix/README.md) - WiX Toolset based installer script.  Build the EXE with Inno Setup first.
-* [Mac OSX, .tar.gz](installers/osx-tar-gz/README.md) - Rearranges the application into an .app format and then wraps the application up in a custom installer .app and finally puts the whole mess into a .tar.gz file.  Think Very Different.  This approach also doesn't require owning a Mac, which is kind of cool because not everyone can afford the expensive hardware.
+* [Mac OSX, .tar.gz](installers/osx-tar-gz/README.md) - Rearranges the application into an .app format and then wraps the entire application in a custom installer .app and finally puts the whole mess into a .tar.gz file.  Think Very Different.  This approach also doesn't require owning a Mac, which is kind of cool because not everyone can afford the expensive hardware.
 * [Linux, .tar.gz](installers/nix-tar-gz/README.md) - Produces the smallest output file out of all of the application packagers.  The installer relies on the system package manager to install PHP and other dependencies on Debian, RedHat, and Arch-based systems - that is, there is fairly broad distro coverage.  The installer itself requires a Freedesktop.org-compliant window manager that supports `xdg-utils` (Gnome, KDE, XFCE, etc. are all fine).
 
 There are some known packaging issues:
 
 * Code signing support is missing - I don't like code signing and neither should anyone else until we can all use DNSSEC DANE TLSA Certificate usage 3 with Authenticode/Gatekeeper/etc.  (Hint to Microsoft/Apple:  Publisher = domain name).  Feel free to open a pull request if you implement really good support for optional code signing in the various packagers.  I'm not particularly interested in code signing given how pointless, fairly expensive, and obnoxious it tends to be.
-* The current Mac installer script is not visually attractive - The installer currently launches the Terminal app to run the real installer.  I'll let you discover what that means.  I was trying to bring the Linux style installer to Mac and it didn't work out very well.  The next release will hopefully be much better looking.  There's an interesting piece of software called PHP App Server...
-* The current Mac installer occasionally breaks thanks to App Translocation - When 'install.sh' prematurely terminates while the installer is still running, the `AppTranslocation` directory where the application is running from vanishes.  It just goes away.  This is thanks to Mac Gatekeeper not expecting apps to exit after transferring control to other programs on the system.
+* The Mac OSX installer has a continually bouncing icon while installing the software.  Since the installer relies on the user's web browser, clicking the icon does nothing.
 
 The installers and the server software have some interesting tales behind them.  Maybe I'll share those stories one day.  For now, enjoy building your next application in PHP App Server!

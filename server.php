@@ -30,8 +30,10 @@
 			"port" => array("arg" => true),
 			"user" => array("arg" => true),
 			"group" => array("arg" => true),
-			"quit" => array("arg" => true),
 			"sfile" => array("arg" => true),
+			"quit" => array("arg" => true),
+			"exts" => array("arg" => true),
+			"www" => array("arg" => true),
 			"help" => array("arg" => false)
 		)
 	);
@@ -49,10 +51,12 @@
 		echo "\t-biz     The business name to use for storing configuration and log files.\n";
 		echo "\t-host    The IP address to bind to.  Default is 127.0.0.1.\n";
 		echo "\t-port    The port to bind to.  Default is 0 (random).\n";
-		echo "\t-user    The user to run PHP scripts as when using CGI.  *NIX only.\n";
-		echo "\t-group   The group to run PHP scripts as when using CGI.  *NIX only.\n";
+		echo "\t-user    The user to run PHP scripts as when using CGI/FastCGI.  *NIX only.\n";
+		echo "\t-group   The group to run PHP scripts as when using CGI/FastCGI.  *NIX only.\n";
 		echo "\t-sfile   The file to store startup JSON information into.\n";
 		echo "\t-quit    The number of seconds to wait without any connected clients.  The default is to never quit.\n";
+		echo "\t-exts    The server extensions directory to use.  Default is the 'extensions' directory.\n";
+		echo "\t-www     The document root to use.  Default is the 'www' directory.\n";
 		echo "\n";
 		echo "Examples:\n";
 		echo "\tphp " . $args["file"] . "\n";
@@ -65,7 +69,10 @@
 	$mimetypemap = json_decode(file_get_contents($rootpath . "/support/mime_types.json"), true);
 
 	// Load all server extensions.
-	$serverexts = PAS_LoadServerExtensions();
+	if (isset($args["opts"]["exts"]))  $extspath = $args["opts"]["exts"];
+	else  $extspath = $rootpath . "/extensions";
+
+	$serverexts = PAS_LoadServerExtensions($extspath);
 
 	// Initialize server extensions.
 	foreach ($serverexts as $serverext)
@@ -437,7 +444,8 @@
 	$wsserver = new WebSocketServer();
 
 	$baseenv = ProcessHelper::GetCleanEnvironment();
-	$docroot = $rootpath . "/www";
+	if (isset($args["opts"]["www"]))  $docroot = $args["opts"]["www"];
+	else  $docroot = $rootpath . "/www";
 
 	// Prepare various files and directories.
 	if ($windows)

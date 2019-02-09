@@ -1,6 +1,6 @@
 <?php
 	// Main package preparation script for Linux.
-	// (C) 2018 CubicleSoft.  All Rights Reserved.
+	// (C) 2019 CubicleSoft.  All Rights Reserved.
 
 	if (!isset($_SERVER["argc"]) || !$_SERVER["argc"])
 	{
@@ -19,7 +19,7 @@
 
 	if ($windows)  echo "This script might not work as expected on Windows.  Running this script via a reasonable Bash port (e.g. git bash) is recommended for tar/gzip support.\n\n";
 
-	require_once $rootpath . "/install-support/dir_helper.php";
+	require_once $rootpath . "/install-support/www/support/dir_helper.php";
 	require_once $rootpath . "/support/apple_icns.php";
 
 	// Find a .phpapp file.
@@ -113,7 +113,7 @@
 	$data .= "\t<key>CFBundleShortVersionString</key>\n";
 	$data .= "\t<string>" . htmlspecialchars($packageinfo["app_ver"]) . "</string>\n";
 	$data .= "\t<key>CFBundleGetInfoString</key>\n";
-	$data .= "\t<string>" . htmlspecialchars($packageinfo["business_name"] . " " . $packageinfo["app_name"] . " " . $packageinfo["app_ver"]) . "</string>\n";
+	$data .= "\t<string>" . trim(htmlspecialchars($packageinfo["business_name"] . " " . $packageinfo["app_name"] . " " . $packageinfo["app_ver"])) . "</string>\n";
 	$data .= "\t<key>CFBundlePackageType</key>\n";
 	$data .= "\t<string>APPL</string>\n";
 	$data .= "\t<key>CFBundleExecutable</key>\n";
@@ -148,7 +148,7 @@
 	$data .= "\t<key>CFBundleShortVersionString</key>\n";
 	$data .= "\t<string>" . htmlspecialchars($packageinfo["app_ver"]) . "</string>\n";
 	$data .= "\t<key>CFBundleGetInfoString</key>\n";
-	$data .= "\t<string>" . htmlspecialchars($packageinfo["business_name"] . " " . $packageinfo["app_name"] . " " . $packageinfo["app_ver"]) . " Installer</string>\n";
+	$data .= "\t<string>" . trim(htmlspecialchars($packageinfo["business_name"] . " " . $packageinfo["app_name"] . " " . $packageinfo["app_ver"])) . " Installer</string>\n";
 	$data .= "\t<key>CFBundlePackageType</key>\n";
 	$data .= "\t<string>APPL</string>\n";
 	$data .= "\t<key>CFBundleExecutable</key>\n";
