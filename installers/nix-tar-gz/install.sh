@@ -16,4 +16,4 @@ else
 fi
 
 echo "Running installer...";
-php install-support/install.php
+php "$SCRIPTPATH/install-support/install.php"

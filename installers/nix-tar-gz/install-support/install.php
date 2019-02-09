@@ -1,6 +1,6 @@
 <?php
 	// Main installer for Linux.
-	// (C) 2018 CubicleSoft.  All Rights Reserved.
+	// (C) 2019 CubicleSoft.  All Rights Reserved.
 
 	if (!isset($_SERVER["argc"]) || !$_SERVER["argc"])
 	{
@@ -185,6 +185,13 @@
 
 	// Optional desktop icon.
 	if ($uid && $packageinfo["user_desktop_icon"])  system("xdg-desktop-icon install " . escapeshellarg($desktopfile));
+
+	// Post-install script.
+	if (file_exists($installpath . "/support/post-install.php"))
+	{
+		echo "Finishing installation...\n";
+		system("php " . escapeshellarg($installpath . "/support/post-install.php"));
+	}
 
 	echo "Done.\n";
 ?>

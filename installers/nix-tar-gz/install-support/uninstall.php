@@ -67,6 +67,9 @@
 	// Deal with the case where someone tries to run the uninstaller without the product being installed or runs it as the wrong user.
 	if (!is_dir($installpath))  CLI::DisplayError("Unable to find '" . $installpath . "'.");
 
+	// Pre-uninstall script.
+	if (file_exists($installpath . "/support/pre-uninstall.php"))  system("php " . escapeshellarg($installpath . "/support/pre-uninstall.php"));
+
 	$vendorappname = ($packageinfo["vendor"] != "" ? trim(preg_replace('/\s+/', "-", preg_replace('/[^a-zA-Z]/', " ", $packageinfo["vendor"])), "-") : "phpapp");
 	if ($vendorappname === "")  $vendorappname = "phpapp";
 	$vendorappname .= "-" . $appname;
