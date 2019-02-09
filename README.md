@@ -164,7 +164,7 @@ Each platform packaging tool has its own instructions:
 
 There are some known packaging issues:
 
-* Code signing support is missing - I don't like code signing and neither should anyone else until we can all use DNSSEC DANE TLSA Certificate usage 3 with Authenticode/Gatekeeper/etc.  (Hint to Microsoft/Apple:  Publisher = domain name).  Feel free to open a pull request if you implement really good support for optional code signing in the various packagers.  I'm not particularly interested in code signing given how pointless, fairly expensive, and obnoxious it tends to be.
+* Code signing support is missing - I don't like code signing and neither should anyone else until we can all use DNSSEC DANE TLSA Certificate usage 3 with Authenticode/Gatekeeper/etc.  (Hint to Microsoft/Apple:  Publisher = domain name).  Feel free to open a pull request if you implement really good support for optional code signing in the various packagers.  I'm not particularly interested in code signing given how pointless, fairly expensive, and obnoxious it tends to be.  Note that on Mac OSX, a user has to hold Ctrl while clicking, then select Open from the menu, and finally open the app when Gatekeeper complains about the lack of a digital signature.
 * The Mac OSX installer has a continually bouncing icon while installing the software.  Since the installer relies on the user's web browser, clicking the icon does nothing.
 
 The installers and the server software have some interesting tales behind them.  Maybe I'll share those stories one day.  For now, enjoy building your next application in PHP App Server!
