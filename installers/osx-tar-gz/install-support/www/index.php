@@ -145,7 +145,7 @@ InitExitApp();
 ?>
 </div></div>
 <div id="footerwrap"><div id="footer">
-<a href="<?=htmlspecialchars($packageinfo["business_url"])?>" style="color: #222222; text-decoration: none;"><?=str_replace("(C)", "&copy", htmlspecialchars($packageinfo["app_copyright"]))?></a> | <a href="<?=htmlspecialchars($packageinfo["app_url"])?>">Product website</a> | <a href="<?=htmlspecialchars($packageinfo["support_url"])?>">Get support</a>
+<a href="<?=htmlspecialchars($packageinfo["business_url"])?>" style="color: #222222; text-decoration: none;" target="_blank"><?=str_replace("(C)", "&copy", htmlspecialchars($packageinfo["app_copyright"]))?></a> | <a href="<?=htmlspecialchars($packageinfo["app_url"])?>" target="_blank">Product website</a> | <a href="<?=htmlspecialchars($packageinfo["support_url"])?>" target="_blank">Get support</a>
 </div></div>
 </body>
 </html>
