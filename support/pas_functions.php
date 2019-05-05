@@ -43,23 +43,75 @@
 		CLI::DisplayError($title . " - " . $msg, $result);
 	}
 
-	function PAS_GetAdminPHPBinary($rootpath)
+	function PAS_GetPHPBinary($detached = true)
 	{
 		$os = php_uname("s");
 		$windows = (strtoupper(substr($os, 0, 3)) == "WIN");
 		$mac = (strtoupper(substr($os, 0, 6)) == "DARWIN");
 
-		if ($windows)  $cmd = escapeshellarg(ProcessHelper::FindExecutable("cmd.exe")) . " /C start \"\" " . escapeshellarg(dirname(PHP_BINARY) . "\\php-win-elevated.exe");
-		else if ($mac)
+		if ($windows)
 		{
-			@chmod($rootpath . "/support/mac-gksudo.sh", 0777);
-			$cmd = escapeshellarg($rootpath . "/support/mac-gksudo.sh") . " " . escapeshellarg(PHP_BINARY);
+			$phpbin = ProcessHelper::FindExecutable(($detached ? "php-win.exe" : "php.exe"), dirname(PHP_BINARY));
+			if ($phpbin === false)  $phpbin = ProcessHelper::FindExecutable(($detached ? "php.exe" : "php-win.exe"), dirname(PHP_BINARY));
 		}
-		else if (($execfile = ProcessHelper::FindExecutable("pkexec", "/usr/bin")) !== false)  $cmd = escapeshellarg($execfile) . " " . escapeshellarg(PHP_BINARY);
-		else if (($execfile = ProcessHelper::FindExecutable("gksudo", "/usr/bin")) !== false)  $cmd = escapeshellarg($execfile) . " " . escapeshellarg(PHP_BINARY);
-		else  $cmd = escapeshellarg("/usr/bin/gksudo") . " " . escapeshellarg(PHP_BINARY);
+		else
+		{
+			$phpbin = ProcessHelper::FindExecutable("php", dirname(PHP_BINARY));
+			if ($phpbin === false)  $phpbin = ProcessHelper::FindExecutable("php", "/usr/bin");
+			if ($phpbin === false)  $phpbin = ProcessHelper::FindExecutable("php", "/usr/sbin");
+		}
+
+		if ($phpbin === false)  $phpbin = PHP_BINARY;
+
+		return $phpbin;
+	}
+
+	function PAS_GetAdminPHPBinary($detached = true)
+	{
+		$os = php_uname("s");
+		$windows = (strtoupper(substr($os, 0, 3)) == "WIN");
+		$mac = (strtoupper(substr($os, 0, 6)) == "DARWIN");
+
+		if ($windows)
+		{
+			$phpbin = ProcessHelper::FindExecutable(($detached ? "php-win-elevated.exe" : "php-elevated.exe"), dirname(PHP_BINARY));
+			if ($phpbin === false)  $phpbin = ProcessHelper::FindExecutable(($detached ? "php-elevated.exe" : "php-win-elevated.exe"), dirname(PHP_BINARY));
+			if ($phpbin === false)  $phpbin = PAS_GetPHPBinary($detached);
+
+			$cmd = escapeshellarg(ProcessHelper::FindExecutable("cmd.exe")) . " /C start \"\" " . escapeshellarg($phpbin);
+		}
+		else
+		{
+			$phpbin = ProcessHelper::FindExecutable("php", dirname(PHP_BINARY));
+			if ($phpbin === false)  $phpbin = ProcessHelper::FindExecutable("php", "/usr/bin");
+			if ($phpbin === false)  $phpbin = ProcessHelper::FindExecutable("php", "/usr/sbin");
+			if ($phpbin === false)  $phpbin = PHP_BINARY;
+
+			if ($mac)
+			{
+				$rootpath = str_replace("\\", "/", dirname(__FILE__));
+
+				@chmod($rootpath . "/mac/gksudo.sh", 0777);
+				$cmd = escapeshellarg($rootpath . "/mac/gksudo.sh") . " " . escapeshellarg($phpbin);
+			}
+			else if (($execfile = ProcessHelper::FindExecutable("pkexec", "/usr/bin")) !== false)  $cmd = escapeshellarg($execfile) . " " . escapeshellarg($phpbin);
+			else if (($execfile = ProcessHelper::FindExecutable("gksudo", "/usr/bin")) !== false)  $cmd = escapeshellarg($execfile) . " " . escapeshellarg($phpbin);
+			else  $cmd = escapeshellarg("/usr/bin/gksudo") . " " . escapeshellarg($phpbin);
+		}
 
 		return $cmd;
+	}
+
+	function PAS_InitStartupFile(&$sdir, &$sfile)
+	{
+		$sdir = sys_get_temp_dir();
+		$sdir = str_replace("\\", "/", $sdir);
+		if (substr($sdir, -1) !== "/")  $sdir .= "/";
+		$sdir .= "php_app_server_start_" . getmypid() . "_" . microtime(true) . "/";
+		@mkdir($sdir, 0750, true);
+		$sfile = $sdir . "info.json";
+		file_put_contents($sfile, "");
+		@chmod($sfile, 0640);
 	}
 
 	function PAS_StartServer($options)
@@ -75,7 +127,7 @@
 		if (isset($options["runasroot"]) && $options["runasroot"])
 		{
 			// Run PHP as root/admin.
-			$cmd = PAS_GetAdminPHPBinary($rootpath);
+			$cmd = PAS_GetAdminPHPBinary();
 
 			$root = true;
 		}
@@ -102,14 +154,7 @@
 		if (isset($options["www"]) && is_string($options["www"]))  $cmd .= " " . escapeshellarg("-www=" . $options["www"]);
 
 		// Have the server write the results of its startup sequence to a file, which will contain the URL to point a web browser at on successful startup.
-		$sdir = sys_get_temp_dir();
-		$sdir = str_replace("\\", "/", $sdir);
-		if (substr($sdir, -1) !== "/")  $sdir .= "/";
-		$sdir .= "php_app_server_start_" . getmypid() . "_" . microtime(true) . "/";
-		@mkdir($sdir, 0750, true);
-		$sfile = $sdir . "info.json";
-		file_put_contents($sfile, "");
-		@chmod($sfile, 0640);
+		PAS_InitStartupFile($sdir, $sfile);
 
 		$cmd .= " " . escapeshellarg("-sfile=" . $sfile);
 //echo $cmd . "\n";

@@ -1,0 +1,60 @@
+@font-face { font-family: 'ext-run-process'; src: url('run_process.woff?20190403-03'); font-weight: normal; font-style: normal; }
+
+[class^="ext-run-process-icon--"], [class*=" ext-run-process-icon--"] {
+	font-family: 'ext-run-process' !important;
+	speak: none;
+	font-style: normal;
+	font-weight: normal;
+	font-variant: normal;
+	text-transform: none;
+	line-height: 1;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+body.ext-run-process-fullscreen { overflow: hidden; }
+body.ext-run-process-resizing { user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; }
+body.ext-run-process-vert-resizing { cursor: ns-resize !important; }
+
+.ext-run-process-terminal-wrap { position: relative; display: flex; flex-direction: column; margin-top: 2.0em; min-height: 2em; }
+.ext-run-process-terminal-wrap.ext-run-process-terminal-fullscreen { position: fixed; top: 0; left: 0; width: 100%; min-height: 0; height: 100%; }
+.ext-run-process-terminal-wrap:first-child { margin-top: 0; }
+.ext-run-process-hidden { display: none !important; }
+.ext-run-process-titlebar { position: relative; display: flex; background-color: #222222; color: #FFFFFF; font-size: 1.0em; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; cursor: default; }
+.ext-run-process-status { padding: 0.35em 0 0.35em 0.5em; border: 1px solid transparent; text-align: center; outline: none; }
+
+.ext-run-process-icon--status-running:before { content: "\e061"; color: #19D319; }
+.ext-run-process-icon--status-terminated { padding-top: 0.4em; }
+.ext-run-process-icon--status-terminated:before { content: "\e900"; color: #DA1818; }
+.ext-run-process-icon--stderr:before { content: "\e01e"; color: #CCCC66; }
+.ext-run-process-icon--warning:before { content: "\e002"; color: #DD9017; }
+
+.ext-run-process-icon--secure-input:before { content: "\e0da"; }
+.ext-run-process-icon--attached:before { content: "\e901"; }
+.ext-run-process-icon--detached:before { content: "\e902"; }
+.ext-run-process-icon--fullscreen:before { content: "\e5d0"; }
+.ext-run-process-icon--fullscreen-exit:before { content: "\e5d1"; }
+.ext-run-process-icon--terminate:before { content: "\e14b"; }
+.ext-run-process-icon--remove:before { content: "\e5cd"; }
+
+.ext-run-process-title { padding: 0.3em 0 0.3em 0.7em; border: 1px solid transparent; margin-right: 1.0em; white-space: nowrap; flex-grow: 1; overflow: hidden; color: #F0F0F0; }
+.ext-run-process-button { display: block; padding: 0.3em 1em; text-align: center; border: 1px solid transparent; cursor: pointer; color: #888888; background-color: transparent; font-size: 1em; outline: none; }
+.ext-run-process-button::-moz-focus-inner { border: 0; }
+.ext-run-process-button:hover, .ext-run-process-button:focus { color: #DDDDDD; background-color: #666666; cursor: pointer; }
+.ext-run-process-button.ext-run-process-secure-input { color: #D9D943; }
+.ext-run-process-button.ext-run-process-secure-input:hover, .ext-run-process-button.ext-run-process-secure-input:focus { color: #FFFB39; }
+.ext-run-process-button.ext-run-process-attached { color: #DDDDDD; }
+.ext-run-process-button.ext-run-process-attached:hover, .ext-run-process-button.ext-run-process-attached:focus { color: #FFFFFF; }
+.ext-run-process-button.ext-run-process-icon--terminate:hover, .ext-run-process-button.ext-run-process-icon--terminate:focus, .ext-run-process-button.ext-run-process-icon--remove:hover, .ext-run-process-button.ext-run-process-icon--remove:focus { background-color: #800C0C; }
+.ext-run-process-terminal { position: relative; flex-grow: 1; overflow: auto; background-color: #111111; border-right: 1px solid #222222; border-bottom: 1px solid #222222; border-left: 1px solid #222222; box-sizing: content-box; }
+.ext-run-process-terminal-fullscreen .ext-run-process-terminal { border-right: 0 none; border-bottom: 0 none; }
+.ext-run-process-resizing .ext-run-process-terminal:before { content: attr(data-size); position: absolute; color: #FFFFFF; font-weight: bold; font-size: 2.5em; z-index: 5; display: block; left: 50%; top: 50%; transform: translate(-50%, -50%); background-color: rgba(0, 0, 0, 0.8); padding: 0.35em 1.0em; }
+.ext-run-process-terminal .terminal.xterm, .ext-run-process-terminal .xterm-viewport { overflow: hidden; }
+.ext-run-process-terminal-vert-sizer { position: absolute; height: 0.5em; bottom: -0.5em; width: 100%; cursor: ns-resize; }
+.ext-run-process-terminal .xterm .xterm-viewport { overflow-y: auto; }
+.ext-run-process-readline-wrap { position: relative; display: flex; background-color: #222222; }
+.ext-run-process-readline-wrap:before { font-family: monospace; content: ">"; color: #888888; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; cursor: default; padding: 0.5em 0.7em 0.5em 0.5em; font-size: 1em; line-height: 1em; }
+.ext-run-process-readline { border: 0; background: transparent; color: #F0F0F0; display: block; flex-grow: 1; padding: 0.5em 0 0.5em; margin: 0em 1.0em 0em 0; font-family: monospace; font-size: 1em; line-height: 1em; height: 1em; outline: none; }
+
+.ext-run-process-disconnected .ext-run-process-button.ext-run-process-attached, .ext-run-process-disconnected .ext-run-process-button.ext-run-process-detached, .ext-run-process-disconnected .ext-run-process-button.ext-run-process-terminate, .ext-run-process-disconnected .ext-run-process-readline-wrap { display: none !important; }
+.ext-run-process-detached .ext-run-process-readline-wrap { display: none !important; }

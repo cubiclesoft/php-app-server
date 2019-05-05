@@ -89,11 +89,12 @@ Dual Document Roots
 
 Installed software applications cannot write to 'www'.  Applications are usually installed by a privileged user on the system but the person running the software will generally not have sufficient permissions to write to the 'www' directory.  This is an important consideration to keep in mind while developing a software application using PHP App Server.  Fortunately, there is a solution to this problem already built into the server:  Dual document roots.
 
-When PHP code is executing from the application's 'www' directory, it has access to four `$_SERVER` variables that are passed in by and are unique to the PHP App Server environment:
+When PHP code is executing from the application's 'www' directory, it has access to five `$_SERVER` variables that are passed in by and are unique to the PHP App Server environment:
 
 * $_SERVER["DOCUMENT_ROOT_USER"] - A document root that can be written to and referenced by URLs.  Resides in the user's HOME directory on a per-OS basis.  Note that any '.php' files stored here are ignored by PHP App Server for security reasons.
 * $_SERVER["PAS_USER_FILES"] - The parent directory of `DOCUMENT_ROOT_USER`.  Can also be written to but cannot be referenced by URLs.  Useful for storing private data for the application (e.g. a SQLite database).
 * $_SERVER["PAS_PROG_FILES"] - The directory containing the access and error log files for PHP App Server.  Useful for providing a page in the application itself to view the error log file and other debugging information, which could be useful for debugging issues with the installed application on a user's system.
+* $_SERVER["PAS_ROOT"] - The root directory containing the application server (i.e. where `server.php` resides).  Useful for accessing files in the `support` subdirectory.
 * $_SERVER["PAS_SECRET"] - An internal, per-app instance session secret.  Useful for generating application XSRF tokens.
 
 When a request is made to the web server, PHP App Server looks first for files in the application's 'www' directory.  If it doesn't find a file there, it then checks for the file in the path specified by `DOCUMENT_ROOT_USER`.
@@ -106,11 +107,213 @@ Writing a localhost server application that relies on a web browser can result i
 However, here are a few important, select security related items that all PHP App Server based software applications must actively defend against (in order of importance):
 
 * [Sensitive data exposure](https://www.owasp.org/index.php/Top_10-2017_A3-Sensitive_Data_Exposure) - Use `$_SERVER["PAS_USER_FILES"]` or a user-defined location to store sensitive user data instead of `$_SERVER["DOCUMENT_ROOT_USER"]`.  Always ask the user what to do if they might consider something to be sensitive (e.g. asking could be as simple as displaying a checkbox to the user).  Privacy-centric individuals will generally speak their mind.
-* [Cross-site request forgery attacks](https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)) - `$_SERVER["PAS_SECRET"]` combined with [CubicleSoft Admin Pack](https://github.com/cubiclesoft/admin-pack/) or other application frameworks help to handle this issue.
+* [Cross-site request forgery attacks](https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)) - `$_SERVER["PAS_SECRET"]` combined with [CubicleSoft Admin Pack](https://github.com/cubiclesoft/admin-pack/) or other application frameworks help to handle this issue.  Server extensions also generally require an authentication token based on `$_SERVER["PAS_SECRET"]`.
 * [Session fixation attacks](https://www.owasp.org/index.php/Session_fixation) - The [security token extension](extensions/1_security_token.php) that is included with PHP App Server automatically deals with this issue.
 * [SQL injection attacks](https://www.owasp.org/index.php/SQL_Injection) - Relevant when using a database.  To avoid this, just don't run raw queries and use a good Database Access Layer (DAL) class like [CSDB](https://github.com/cubiclesoft/csdb/).
 
 There are many other security considerations that are in the [OWASP Top 10 list](https://www.owasp.org/index.php/Category:OWASP_Top_Ten_Project) and the [OWASP attacks list](https://www.owasp.org/index.php/Category:Attack) to also keep in mind, but those are the big ones.
+
+Long-Running Processes
+----------------------
+
+PHP App Server includes a powerful server extension and two SDKs to make starting, managing, and monitoring long-running processes easy and secure from both PHP and Javascript.  Started processes run as the user that PHP App Server is running as but aren't limited by timeouts or memory limits like regular CGI/FastCGI requests are.  Running processes can be actively monitored and even interacted with from the web browser via the included Javascript SDK.
+
+Long-running scripts should ideally be stored in a 'scripts' subdirectory off the main PHP App Server 'support' directory.  That way they are away from the main web root but the application can still find them via `$_SERVER["PAS_ROOT"]`.  Here's an example of starting a PHP script called 'test.php' using the PHP SDK:
+
+```php
+<?php
+	$rootpath = str_replace("\\", "/", dirname(__FILE__));
+
+	// Load the PHP App Server common functions.
+	require_once $_SERVER["PAS_ROOT"] . "/support/pas_functions.php";
+
+	$cmd = escapeshellarg(PAS_GetPHPBinary());
+	$cmd .= " " . escapeshellarg(realpath($_SERVER["PAS_ROOT"] . "/support/scripts/test.php"));
+
+	$options = array();
+
+	// Start the process.
+	require_once $rootpath . "/support/pas_run_process_sdk.php";
+
+	$rp = new PAS_RunProcessSDK();
+
+	$result = $rp->StartProcess("demo", $cmd, $options);
+	if (!$result["success"])  echo "An error occurred while starting a long-running process.";
+
+	echo "Done.";
+?>
+```
+
+Each process is given a tag, which allows multiple running processes to be grouped by tag.  In the example above, the tag is called "demo".  The Javacsript SDK can later be used to show only processes that use a specific tag:
+
+```php
+<?php
+		$rootpath = str_replace("\\", "/", dirname(__FILE__));
+
+		require_once $rootpath . "/support/pas_run_process_sdk.php";
+
+		PAS_RunProcessSDK::OutputCSS();
+		PAS_RunProcessSDK::OutputJS();
+
+?>
+<div id="terminal-manager"></div>
+
+<script type="text/javascript">
+// NOTE:  Always put Javascript RunProcesSDK and TerminalManager class instances in a Javascript closure like this one to limit the XSRF attack surface.
+(function() {
+	// Establish a new connection with a compatible WebSocket server.
+	var runproc = new RunProcessSDK('<?=PAS_RunProcessSDK::GetURL()?>', false, '<?=PAS_RunProcessSDK::GetAuthToken()?>');
+
+	// Debugging mode dumps incoming and outgoing packets to the web browser's debug console.
+	runproc.debug = true;
+
+	// Establish a new terminal manager instance.
+	var elem = document.getElementById('terminal-manager');
+
+	// Automatically attach to all channels with the 'demo' tag.
+	var options = {
+		tag: 'demo'
+	};
+
+	var tm = new TerminalManager(runproc, elem, options);
+})();
+</script>
+```
+
+The PHP SDK simplifies emitting the necessary CSS and Javscript dependencies into the HTML.  The above code demonstrates setting up a WebSocket connection to the PHP App Server extension and connecting it to a TerminalManager instance to monitor for processes with the "demo" tag.  TerminalManager is an included Javascript class that automatically creates and manages one or more ExecTerminals (also included) based on the input criteria.  In this case, TerminalManager will automatically attach to any process created with a "demo" tag.  An ExecTerminal looks like this:
+
+[image here]
+
+Each ExecTerminal wraps up a [XTerm.js Terminal](https://xtermjs.org/) instance with additional features:
+
+* Status icons for process running/terminated, had output on stderr, and disconnected from WebSocket.
+* Title that can be dynamically changed from the script via an ANSI escape sequence.
+* Various buttons to attach and detach, forcefully terminate the process, enter/exit fullscreen mode, and remove the ExecTerminal.
+* Multiple input modes:  'interactive', 'interactive_echo' (rarely used), 'readline' (most common, keeps history), 'readline_secure', and 'none'.
+* Intuitive terminal resizing.
+
+And more.
+
+Note that TerminalManager and ExecTerminal are not required for managing long-running processes but they do handle quite a few common scenarios.  The example code above only scratches the surface of what can be done.
+
+Here is the full list of TerminalManager options:
+
+* fullscreen - A boolean indicating whether or not an attached ExecTerminal starts in fullscreen mode (Default is false).
+* autoattach - A boolean indicating whether or not to automatically attach to channels and create ExecTerminals (Default is true).
+* manualdetach - A boolean indicating whether or not to display the manual attach/detach button on the title bar (Default is false).
+* terminatebutton - A boolean indicating whether or not to display the button that allows the user to forcefully terminate the process (Default is true).
+* autoremove - A boolean indicating whether or not to automatically remove terminated ExecTerminals (Default is false).  Can also be a string of 'keep_if_stderr', which removes the ExecTerminal if there was nothing output on stderr or keeps it if there was output on stderr.
+* removebutton - A boolean indicating whether or not to display the button that allows the user to remove the ExecTerminal (Default is true).
+* initviewportheight - A double containing the multiplier of the viewport height that ExecTerminals initialize at (Default is 0.5, which is 50% viewport height).
+* historylines - An integer containing the number of lines of history to keep in 'readline' input mode (Default is 200).  That user input box is fairly powerful.
+* terminaltheme - A Javascript object containing a XTerm.js Terminal-compatible theme (Default is { foreground: '#BBBBBB', cursor: '#00D600', cursorAccent: '#F0F0F0' }).
+* oncreate - An optional callback function that is called whenever an ExecTerminal is created (Default is null).  The callback function must accept one parameter - callback(msg).
+* onmessage - An optional callback function that is called whenever a message is received from the WebSocket for the TerminalManager instance (Default is null).  The callback function must accept one parameter - callback(msg).
+* channel - A boolean of false or an integer containing a specific channel to attach to (Default is false).  Useful for monitoring exactly one running process.
+* tag - A boolean of false or a string containing a tag name to watch for (Default is false).  Useful for monitoring many running processes at one time.
+* langmap - An object containing translation strings (Default is an empty object).
+
+The included [XTerm PHP class]() offers seamless and simplified control over the output from a long-running script to the XTerm-compatible ExecTerminal in the browser.  No need to remember ANSI escape codes.  Here's an example script:
+
+```php
+<?php
+	if (!isset($_SERVER["argc"]) || !$_SERVER["argc"])
+	{
+		echo "This file is intended to be run from the command-line.";
+
+		exit();
+	}
+
+	$rootpath = str_replace("\\", "/", dirname(__FILE__));
+
+	require_once $rootpath . "/../xterm.php";
+
+	for ($x = 0; $x < 5; $x++)
+	{
+		echo "Test:  " . ($x + 1) . "\n";
+
+		sleep(1);
+	}
+
+	echo "That's boring.  Let's...";
+	sleep(1);
+
+	XTerm::SetItalic();
+	echo "spice it up!\n";
+	XTerm::SetItalic(false);
+	sleep(1);
+
+	$palette = XTerm::GetBlackOptimizedColorPalette();
+
+	for ($x = 5; $x < 10; $x++)
+	{
+		$num = mt_rand(17, 231);
+		XTerm::SetForegroundColor($palette[$num]);
+		echo "Test:  " . ($x + 1) . " (Color " . $palette[$num] . ")\n";
+
+		sleep(1);
+	}
+	XTerm::SetForegroundColor(false);
+
+	XTerm::SetTitle("Changing the title...");
+	usleep(250000);
+	XTerm::SetTitle("Changing the title...like");
+	usleep(250000);
+	XTerm::SetTitle("Changing the title...like a");
+	usleep(250000);
+	XTerm::SetTitle("Changing the title...like a BOSS!");
+	usleep(500000);
+
+	echo "\n";
+	echo "Enter some text:  ";
+	$line = rtrim(fgets(STDIN));
+
+	XTerm::SetBold();
+	echo "Here's what you wrote:  " . $line . "\n\n";
+	XTerm::SetBold(false);
+
+	echo "[Switching to 'readline_secure' mode]\n\n";
+	XTerm::SetCustomInputMode('readline_secure');
+
+	echo "Enter some more text:  ";
+	XTerm::SetColors(0, 0);
+	$line = rtrim(fgets(STDIN));
+	XTerm::SetColors(false, false);
+	XTerm::SetCustomInputMode('readline');
+
+	XTerm::SetBold();
+	echo "Here's what you wrote:  " . $line . "\n\n";
+	XTerm::SetBold(false);
+
+	echo "Done.\n";
+?>
+```
+
+Finally, if you use CubicleSoft Admin Pack or FlexForms to build your application, the PHP SDK includes native FlexForms integration (i.e. no need to write Javascript/HTML):
+
+```php
+<?php
+	// Admin Pack and FlexForms integration.
+	$rootpath = str_replace("\\", "/", dirname(__FILE__));
+
+	require_once $rootpath . "/support/pas_run_process_sdk.php";
+
+	$contentopts = array(
+		"desc" => "Showing all long-running processes with the 'demo' tag.",
+		"fields" => array(
+			array(
+				"type" => "pas_run_process",
+//				"debug" => true,
+				"options" => array(
+					"tag" => "demo"
+				)
+			)
+		)
+	);
+
+	BB_GeneratePage("Process Demo", $menuopts, $contentopts);
+?>
+```
 
 Creating Extensions
 -------------------
@@ -123,11 +326,11 @@ However, those benefits come with two major drawbacks.  The first is that if an 
 
 The included [security token extension](extensions/1_security_token.php) is an excellent starting point for building an extension that can properly handle requests.  The security token extension is fairly short, well-commented, and works.
 
-The server assumes that the filename is a part of the class name.  Whatever the PHP file is named, the class name within has to follow suit, otherwise PHP App Server will fail to load the extension.  Extension names should start with a number, which indicates the expected order.
+The server assumes that the filename is a part of the class name.  Whatever the PHP file is named, the class name within has to follow suit, otherwise PHP App Server will fail to load the extension.  Extension names should start with a number, which indicates the expected order in which to call the extension.
 
 The variables available to normal PHP scripts are also available to extensions via the global `$baseenv` variable (e.g. `$baseenv["DOCUMENT_ROOT_USER"]` and `$baseenv["PAS_USER_FILES"]`).  Please do not alter the `$baseenv` values as that will negatively affect the rest of the application.
 
-Always use the `ProcessHelper::StartProcess()` static function when starting external, long-running processes inside an extension.  The [ProcessHelper](https://github.com/cubiclesoft/php-misc/blob/master/docs/process_helper.md) class is designed to start non-blocking processes in the background across all platforms.
+Always use the `ProcessHelper::StartProcess()` static function when starting external, long-running processes inside an extension.  The [ProcessHelper](https://github.com/cubiclesoft/php-misc/blob/master/docs/process_helper.md) class is designed to start non-blocking processes in the background across all platforms.  Note that the preferred way to start long-running processes is to use the long-running processes extension.
 
 Pre-Installer Tasks
 -------------------

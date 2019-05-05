@@ -1,7 +1,7 @@
 *.icns
 *.tar.gz
-/www/*
-!/www/README.md
+/support/scripts/
+/www/test*
 /installers/win-innosetup/Output/
 /installers/win-innosetup/php-win-32/*
 !/installers/win-innosetup/php-win-32/README.md

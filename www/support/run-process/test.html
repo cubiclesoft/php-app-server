@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Test</title>
+</head>
+<body>
+<link rel="stylesheet" href="xterm.css">
+<link rel="stylesheet" href="run_process.css">
+<script type="text/javascript" src="xterm.js"></script>
+<script type="text/javascript" src="addons/fit.js"></script>
+<script type="text/javascript" src="run_process.js"></script>
+
+<script type="text/javascript" src="../jquery-3.1.1.min.js"></script>
+<script type="text/javascript">
+$(function() {
+	var AttachToggle = function(e) {
+		console.log('Toggling attach');
+
+		et.settings.attached = !et.settings.attached;
+		et.settings.attachedbutton = AttachToggle;
+
+		et.SettingsUpdated();
+	}
+
+	var connecticon = setInterval(function() {
+		et.settings.connected = !et.settings.connected;
+
+		et.SettingsUpdated();
+	}, 3000);
+
+	var et = new ExecTerminal(document.getElementById('terminal-manager'), {
+		inittitle: 'Just testing...',
+
+		attachedbutton: AttachToggle,
+
+		terminatebutton: function(e) {
+			console.log('Terminating...');
+
+			et.settings.running = false;
+
+			et.SettingsUpdated();
+		},
+
+		removebutton: function(e) {
+			console.log('Removing...');
+
+			clearInterval(connecticon);
+
+			et.Destroy();
+		},
+
+		onenter: function(line, secure) {
+			console.log((secure ? "Secure mode" : "Plain text") + ':  ' + line);
+		},
+
+		inputmode: 'readline_secure'
+	});
+
+	et.terminal.setOption('theme', {
+		foreground: '#BBBBBB',
+		cursor: '#00D600',
+		cursorAccent: '#F0F0F0'
+	});
+
+	// Write dummy text.
+	for (var x = 0; x < 100; x++)  et.terminal.write('abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789\r\n');
+
+	// Set a new title.
+	et.terminal.write('\x1B]0;My<br> new title!\x07');
+
+	// Watch resizing.
+	et.terminal.on('resize', function(size) {
+		console.log('New size:  ' + size.cols + ' x ' + size.rows);
+	});
+
+	setTimeout(function() {
+		et.settings.hadstderr = true;
+
+		et.SettingsUpdated();
+	}, 5000);
+
+	// Verify that there aren't any leaked globals.
+	setTimeout(function() {
+		// Create an iframe and put it in the <body>.
+		var iframe = document.createElement('iframe');
+		document.body.appendChild(iframe);
+
+		// We'll use this to get a "pristine" window object.
+		var pristineWindow = iframe.contentWindow.window;
+
+		// Go through every property on `window` and filter it out if
+		// the iframe's `window` also has it.
+		console.log(Object.keys(window).filter(function (key) {
+			return !pristineWindow.hasOwnProperty(key)
+		}));
+
+		// Remove the iframe.
+		document.body.removeChild(iframe)
+	}, 15000);
+});
+</script>
+
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.  Pre-terminal.</p>
+<div id="terminal-manager">
+</div>
+<p>So cool.  Post-terminal.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+<p>So cool.</p>
+</body>
+</html>
