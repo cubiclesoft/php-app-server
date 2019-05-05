@@ -67,7 +67,7 @@
 	copy($basepath . "/" . $appname . ".png", $stagingpath . "/" . $appname . ".png");
 
 	DirHelper::Copy($basepath . "/extensions", $stagingpath . "/extensions");
-	DirHelper::Copy($basepath . "/support", $stagingpath . "/support", true, array($basepath . "/support/createprocess-win.exe" => true, $basepath . "/support/messagebox-win.exe" => true));
+	DirHelper::Copy($basepath . "/support", $stagingpath . "/support", true, array($basepath . "/support/windows" => true, $basepath . "/support/mac" => true));
 	DirHelper::Copy($basepath . "/www", $stagingpath . "/www");
 
 	DirHelper::Copy($rootpath . "/install-support", $stagingpath . "/install-support");
