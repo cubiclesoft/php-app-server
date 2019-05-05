@@ -28,6 +28,9 @@
 
 		public static function Copy($srcdir, $destdir, $recurse = true, $exclude = array())
 		{
+			$srcdir = rtrim(str_replace("\\", "/", $srcdir), "/");
+			$destdir = rtrim(str_replace("\\", "/", $destdir), "/");
+
 			@mkdir($destdir, 0777, true);
 
 			$dir = @opendir($srcdir);
@@ -39,7 +42,7 @@
 					{
 						if (is_dir($srcdir . "/" . $file))
 						{
-							if ($recurse)  self::Copy($srcdir . "/" . $file, $destdir . "/" . $file, true, true);
+							if ($recurse)  self::Copy($srcdir . "/" . $file, $destdir . "/" . $file, true, $exclude);
 						}
 						else
 						{
