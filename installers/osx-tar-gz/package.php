@@ -88,7 +88,7 @@
 	copy($basepath . "/" . $appname . ".icns", $stagingpath . "/Contents/MacOS/app/Contents/Resources/" . $appname . ".icns");
 
 	DirHelper::Copy($basepath . "/extensions", $stagingpath . "/Contents/MacOS/app/Contents/MacOS/extensions");
-	DirHelper::Copy($basepath . "/support", $stagingpath . "/Contents/MacOS/app/Contents/MacOS/support", true, array($basepath . "/support/createprocess-win.exe" => true, $basepath . "/support/messagebox-win.exe" => true));
+	DirHelper::Copy($basepath . "/support", $stagingpath . "/Contents/MacOS/app/Contents/MacOS/support", true, array($basepath . "/support/windows" => true, $basepath . "/support/linux" => true));
 	DirHelper::Copy($basepath . "/www", $stagingpath . "/Contents/MacOS/app/Contents/MacOS/www");
 
 	DirHelper::Copy($rootpath . "/install-support", $stagingpath . "/Contents/MacOS/install-support");

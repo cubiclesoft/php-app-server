@@ -164,7 +164,7 @@ Name: "{app}\www"
 Source: "{#AppBase}.phpapp"; DestDir: "{app}"
 Source: "{#AppBase}.ico"; DestDir: "{app}"
 Source: "server.php"; DestDir: "{app}"
-Source: "support\*"; DestDir: "{app}\support"; Flags: createallsubdirs recursesubdirs
+Source: "support\*"; Excludes: "mac\,nix\"; DestDir: "{app}\support"; Flags: createallsubdirs recursesubdirs
 Source: "extensions\*"; Excludes: "README.md"; DestDir: "{app}\extensions"; Flags: createallsubdirs recursesubdirs skipifsourcedoesntexist
 Source: "www\*"; Excludes: "README.md"; DestDir: "{app}\www"; Flags: createallsubdirs recursesubdirs
 #ifdef PHP_32
