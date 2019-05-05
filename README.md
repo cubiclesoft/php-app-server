@@ -148,13 +148,12 @@ Each process is given a tag, which allows multiple running processes to be group
 
 ```php
 <?php
-		$rootpath = str_replace("\\", "/", dirname(__FILE__));
+	$rootpath = str_replace("\\", "/", dirname(__FILE__));
 
-		require_once $rootpath . "/support/pas_run_process_sdk.php";
+	require_once $rootpath . "/support/pas_run_process_sdk.php";
 
-		PAS_RunProcessSDK::OutputCSS();
-		PAS_RunProcessSDK::OutputJS();
-
+	PAS_RunProcessSDK::OutputCSS();
+	PAS_RunProcessSDK::OutputJS();
 ?>
 <div id="terminal-manager"></div>
 
@@ -182,7 +181,7 @@ Each process is given a tag, which allows multiple running processes to be group
 
 The PHP SDK simplifies emitting the necessary CSS and Javscript dependencies into the HTML.  The above code demonstrates setting up a WebSocket connection to the PHP App Server extension and connecting it to a TerminalManager instance to monitor for processes with the "demo" tag.  TerminalManager is an included Javascript class that automatically creates and manages one or more ExecTerminals (also included) based on the input criteria.  In this case, TerminalManager will automatically attach to any process created with a "demo" tag.  An ExecTerminal looks like this:
 
-[image here]
+![A screenshot of an ExecTerminal](https://user-images.githubusercontent.com/1432111/57195442-674c0400-6f07-11e9-9bcd-62269ca0de3c.png)
 
 Each ExecTerminal wraps up a [XTerm.js Terminal](https://xtermjs.org/) instance with additional features:
 
@@ -289,7 +288,7 @@ The included [XTerm PHP class]() offers seamless and simplified control over the
 ?>
 ```
 
-Finally, if you use CubicleSoft Admin Pack or FlexForms to build your application, the PHP SDK includes native FlexForms integration (i.e. no need to write Javascript/HTML):
+Finally, if you use CubicleSoft [Admin Pack](https://github.com/cubiclesoft/admin-pack/) or [FlexForms](https://github.com/cubiclesoft/php-flexforms/) to build your application, the PHP SDK includes native FlexForms integration (i.e. no need to write Javascript/HTML):
 
 ```php
 <?php
