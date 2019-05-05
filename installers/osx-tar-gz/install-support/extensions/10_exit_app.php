@@ -4,6 +4,8 @@
 
 	class PAS_Extension_10_exit_app
 	{
+		private $delay, $lastclient;
+
 		public function InitServer()
 		{
 			$this->delay = false;
@@ -40,17 +42,27 @@
 			return false;
 		}
 
+		public function RequireAuthToken()
+		{
+			return true;
+		}
+
 		public function ProcessRequest($method, $path, $client, &$data)
 		{
+			if (!is_array($data))  return false;
+
 			$this->delay = (isset($data["delay"]) && $data["delay"] > 0 ? (int)$data["delay"] : false);
 
+			$result = array("success" => true);
+
 			// WebSocket expected.
-			if ($method === false)  return array("success" => true);
+			if ($method === false)  return $result;
 
 			// Prevent browsers and proxies from doing bad things.
 			$client->SetResponseNoCache();
 
-			$client->AddResponseContent("OK");
+			$client->SetResponseContentType("application/json");
+			$client->AddResponseContent(json_encode($result, JSON_UNESCAPED_SLASHES));
 			$client->FinalizeResponse();
 
 			return true;

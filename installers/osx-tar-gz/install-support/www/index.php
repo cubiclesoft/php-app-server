@@ -117,6 +117,7 @@ function InitExitApp()
 
 	ws.addEventListener('open', function(e) {
 		var msg = {
+			authtoken: '<?=hash_hmac("sha256", "/exit-app/", $_SERVER["PAS_SECRET"])?>',
 			delay: 3
 		};
 
