@@ -1,6 +1,6 @@
 <?php
 	// PHP App Server.
-	// (C) 2018 CubicleSoft.  All Rights Reserved.
+	// (C) 2019 CubicleSoft.  All Rights Reserved.
 
 	if (!isset($_SERVER["argc"]) || !$_SERVER["argc"])
 	{
@@ -60,7 +60,7 @@
 		echo "\n";
 		echo "Examples:\n";
 		echo "\tphp " . $args["file"] . "\n";
-		echo "\tphp " . $args["file"] . " -host=[::1] -port=5582\n";
+		echo "\tphp " . $args["file"] . " -host [::1] -port 5582\n";
 
 		exit();
 	}
@@ -189,7 +189,7 @@
 
 	function InitClientAppData()
 	{
-		return array("currext" => false, "url" => false, "path" => false, "cgi" => false, "fcgi" => false, "file" => false, "respcode" => 200, "respmsg" => "OK");
+		return array("currext" => false, "url" => false, "path" => false, "cgi" => false, "fcgi" => false, "file" => false, "respcode" => 200, "respmsg" => "OK", "auth" => false);
 	}
 
 	// Extends the web server class to gather transfer statistics.
@@ -279,7 +279,7 @@
 	$tempip = stream_socket_get_name($webserver->GetStream(), false);
 	$pos = strrpos($tempip, ":");
 	if ($pos !== false)  $args["opts"]["port"] = substr($tempip, $pos + 1);
-	$initresult["url"] = "http://" . $args["opts"]["host"] . ":" . $args["opts"]["port"] . "/";
+	$initresult["url"] = "http://" . $args["opts"]["host"] . ":" . (int)$args["opts"]["port"] . "/";
 	$initresult["port"] = (int)$args["opts"]["port"];
 
 	// Core function for forwarding and rate limiting incoming data from the browser into PHP CGI stdin.
@@ -443,6 +443,14 @@
 	// Final initialization.
 	$wsserver = new WebSocketServer();
 
+	$origins = array(
+		"http://" . $args["opts"]["host"] . ":" . (int)$args["opts"]["port"]
+	);
+
+	if (!isset($args["opts"]["sfile"]))  $origins[] = "http://localhost:" . (int)$args["opts"]["port"];
+
+	$wsserver->SetAllowedOrigins($origins);
+
 	$baseenv = ProcessHelper::GetCleanEnvironment();
 	if (isset($args["opts"]["www"]))  $docroot = $args["opts"]["www"];
 	else  $docroot = $rootpath . "/www";
@@ -528,6 +536,7 @@
 	$baseenv["DOCUMENT_ROOT_USER"] = $ufilespath . "/www";
 	$baseenv["PAS_PROG_FILES"] = $pfilespath;
 	$baseenv["PAS_USER_FILES"] = $ufilespath;
+	$baseenv["PAS_ROOT"] = $rootpath;
 
 	$rng = new CSPRNG();
 	$baseenv["PAS_SECRET"] = $rng->GenerateToken();
@@ -916,12 +925,15 @@
 							{
 								$client->readdata->Open();
 								$data = @json_decode($client->readdata->Read(1000000), true);
+								$client->readdata->Close();
 							}
 
 							// Process the request.
 							if (!is_array($data))
 							{
 								$result2 = array("success" => false, "error" => "Data sent was not able to be decoded.", "errorcode" => "invalid_data");
+
+								WriteErrorLog("400 Bad Request - Invalid data", $client->ipaddr, $client->request, $result2);
 
 								$client->SetResponseCode(400);
 
@@ -934,18 +946,63 @@
 							}
 							else
 							{
-								$result2 = $serverexts[$client->appdata["currext"]]->ProcessRequest($client->request["method"], $client->appdata["path"], $client, $data);
-								if ($result2 === false)
+								if ($client->appdata["auth"] === false)
 								{
-									$webserver->RemoveClient($id);
+									// Parse the Authorization header, if any.
+									if (isset($client->headers["Authorization"]))
+									{
+										$pos = strpos($client->headers["Authorization"], " ");
+										if ($pos !== false && strtolower(substr($client->headers["Authorization"], 0, $pos)) === "basic")
+										{
+											$auth = explode(":", base64_decode(trim(substr($client->headers["Authorization"], $pos + 1))));
+											if (count($auth) == 2)
+											{
+												$data["authuser"] = urldecode($auth[0]);
+												$data["authtoken"] = urldecode($auth[1]);
+											}
+										}
+									}
 
-									echo "Client ID " . $id . " removed.\n";
+									if (!$serverexts[$client->appdata["currext"]]->RequireAuthToken() || (isset($data["authuser"]) && isset($data["authtoken"]) && Str::CTstrcmp(hash_hmac("sha256", $client->appdata["path"], $baseenv["PAS_SECRET"]), $data["authtoken"]) == 0))
+									{
+										$client->appdata["auth"] = (isset($data["authuser"]) && is_string($data["authuser"]) && $data["authuser"] !== "" ? $data["authuser"] : true);
 
-									unset($client->appdata);
+										unset($data["authuser"]);
+										unset($data["authtoken"]);
+									}
+									else
+									{
+										if (!isset($data["authtoken"]))  $result2 = array("success" => false, "error" => "Missing auth token.", "errorcode" => "missing_authtoken");
+										else  $result2 = array("success" => false, "error" => "Invalid auth token.", "errorcode" => "invalid_authtoken");
+
+										WriteErrorLog("403 Forbidden - Auth user/token", $client->ipaddr, $client->request, $result2);
+
+										$client->SetResponseCode(403);
+
+										// Prevent browsers and proxies from doing bad things.
+										$client->SetResponseNoCache();
+
+										$client->SetResponseContentType("application/json");
+										$client->AddResponseContent(json_encode($result2));
+										$client->FinalizeResponse();
+									}
 								}
-								else if (!$client->responsefinalized)
+
+								if ($client->appdata["auth"] !== false)
 								{
-									$client->appdata["data"] = $data;
+									$result2 = $serverexts[$client->appdata["currext"]]->ProcessRequest($client->request["method"], $client->appdata["path"], $client, $data);
+									if ($result2 === false)
+									{
+										$webserver->RemoveClient($id);
+
+										echo "Client ID " . $id . " removed.\n";
+
+										unset($client->appdata);
+									}
+									else if (!$client->responsefinalized)
+									{
+										$client->appdata["data"] = $data;
+									}
 								}
 							}
 						}
@@ -1349,7 +1406,24 @@
 					"rawsend" => 0,
 				);
 
-				$result3 = $serverexts[$client->appdata["currext"]]->ProcessRequest(false, $client->appdata["path"], $client, $data);
+				if ($client->appdata["auth"] === false)
+				{
+					$result3 = (!$serverexts[$client->appdata["currext"]]->RequireAuthToken() || (is_array($data) && isset($data["authtoken"]) && Str::CTstrcmp(hash_hmac("sha256", $client->appdata["path"], $baseenv["PAS_SECRET"]), $data["authtoken"]) == 0));
+					if ($result3)
+					{
+						$client->appdata["auth"] = (isset($data["authuser"]) && is_string($data["authuser"]) && $data["authuser"] !== "" ? $data["authuser"] : true);
+
+						unset($data["authuser"]);
+						unset($data["authtoken"]);
+					}
+					else
+					{
+						if (!isset($data["authtoken"]))  $result3 = array("success" => false, "error" => "Missing auth token.", "errorcode" => "missing_authtoken");
+						else  $result3 = array("success" => false, "error" => "Invalid auth token.", "errorcode" => "invalid_authtoken");
+					}
+				}
+
+				if ($client->appdata["auth"] !== false)  $result3 = $serverexts[$client->appdata["currext"]]->ProcessRequest(false, $client->appdata["path"], $client, $data);
 				if ($result3 === false)
 				{
 					$wsserver->RemoveClient($id);
@@ -1364,7 +1438,7 @@
 					$data = json_encode($result3, JSON_UNESCAPED_SLASHES);
 					$result2 = $ws->Write($data, $result2["data"]["opcode"]);
 
-					$stats["send"] = strlen($data);
+					$stats["rawsend"] = strlen($data);
 
 					$info = array(
 						"ext" => $client->appdata["currext"],
