@@ -212,7 +212,7 @@ Here is the full list of TerminalManager options:
 * tag - A boolean of false or a string containing a tag name to watch for (Default is false).  Useful for monitoring many running processes at one time.
 * langmap - An object containing translation strings (Default is an empty object).
 
-The included [XTerm PHP class]() offers seamless and simplified control over the output from a long-running script to the XTerm-compatible ExecTerminal in the browser.  No need to remember ANSI escape codes.  Here's an example script:
+The included [XTerm PHP class](https://github.com/cubiclesoft/php-app-server/blob/master/support/xterm.php) offers seamless and simplified control over the output from a long-running script to the XTerm-compatible ExecTerminal in the browser.  No need to remember ANSI escape codes.  Here's an example script:
 
 ```php
 <?php
