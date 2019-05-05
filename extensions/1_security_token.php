@@ -52,10 +52,16 @@
 			return false;
 		}
 
+		// Nearly all extensions should return true.  Since this is a security extension, it provides its own authentication mechanism.
+		public function RequireAuthToken()
+		{
+			return false;
+		}
+
 		public function ProcessRequest($method, $path, $client, &$data)
 		{
 			// Remove WebSocket connections.
-			if ($method === false)  return false;
+			if ($method === false || !is_array($data))  return false;
 
 			if ($this->inittoken !== false)
 			{
