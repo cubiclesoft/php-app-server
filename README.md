@@ -151,6 +151,12 @@ Each process is given a tag, which allows multiple running processes to be group
 
 ```php
 <?php
+	header("Content-Type: text/html; charset=UTF8");
+?>
+<!DOCTYPE html>
+<html>
+<body>
+<?php
 	$rootpath = str_replace("\\", "/", dirname(__FILE__));
 
 	require_once $rootpath . "/support/pas_run_process_sdk.php";
@@ -180,6 +186,8 @@ Each process is given a tag, which allows multiple running processes to be group
 	var tm = new TerminalManager(runproc, elem, options);
 })();
 </script>
+</body>
+</html>
 ```
 
 The PHP SDK simplifies emitting the necessary CSS and Javscript dependencies into the HTML.  The above code demonstrates setting up a WebSocket connection to the PHP App Server extension and connecting it to a TerminalManager instance to monitor for processes with the "demo" tag.  TerminalManager is an included Javascript class that automatically creates and manages one or more ExecTerminals (also included) based on the input criteria.  In this case, TerminalManager will automatically attach to any process created with a "demo" tag.  An ExecTerminal looks like this:
