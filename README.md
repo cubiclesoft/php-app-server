@@ -189,7 +189,7 @@ Each ExecTerminal wraps up a [XTerm.js Terminal](https://xtermjs.org/) instance 
 
 * Status icons for process running/terminated, had output on stderr, and disconnected from WebSocket.
 * Title that can be dynamically changed from the script via an ANSI escape sequence.
-* Various buttons to attach and detach, forcefully terminate the process, enter/exit fullscreen mode, and remove the ExecTerminal.
+* Various buttons to attach and detach (not shown above), enter/exit fullscreen mode, forcefully terminate the process, and remove the ExecTerminal.
 * Multiple input modes:  'interactive', 'interactive_echo' (rarely used), 'readline' (most common, keeps history), 'readline_secure', and 'none'.
 * Intuitive terminal resizing.
 
