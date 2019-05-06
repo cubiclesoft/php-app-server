@@ -127,6 +127,7 @@ Here's an example of starting a PHP script called 'test.php' using the PHP SDK:
 	$rootpath = str_replace("\\", "/", dirname(__FILE__));
 
 	// Load the PHP App Server common functions.
+	require_once $_SERVER["PAS_ROOT"] . "/support/process_helper.php";
 	require_once $_SERVER["PAS_ROOT"] . "/support/pas_functions.php";
 
 	$cmd = escapeshellarg(PAS_GetPHPBinary());
