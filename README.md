@@ -295,9 +295,7 @@ Finally, if you use CubicleSoft [Admin Pack](https://github.com/cubiclesoft/admi
 ```php
 <?php
 	// Admin Pack and FlexForms integration.
-	$rootpath = str_replace("\\", "/", dirname(__FILE__));
-
-	require_once $rootpath . "/support/pas_run_process_sdk.php";
+	require_once "support/pas_run_process_sdk.php";
 
 	$contentopts = array(
 		"desc" => "Showing all long-running processes with the 'demo' tag.",
