@@ -118,6 +118,8 @@ Long-Running Processes
 
 PHP App Server includes a powerful server extension and two SDKs to make starting, managing, and monitoring long-running processes easy and secure from both PHP and Javascript.  Started processes run as the user that PHP App Server is running as but aren't limited by timeouts or memory limits like regular CGI/FastCGI requests are.  Running processes can be actively monitored and even interacted with from the web browser via the included Javascript SDK.
 
+[![Long-running Process Extension Overview video](https://user-images.githubusercontent.com/1432111/57317400-ddd63680-70ac-11e9-9f72-bc69b803c3e2.png)](https://www.youtube.com/watch?v=IGfJGDxlQcQ "Long-running Process Extension Overview")
+
 Long-running scripts should ideally be stored in a 'scripts' subdirectory off the main PHP App Server 'support' directory.  That way they are away from the main web root but the application can still find them via `$_SERVER["PAS_ROOT"]`.
 
 Here's an example of starting a PHP script called 'test.php' using the PHP SDK:
