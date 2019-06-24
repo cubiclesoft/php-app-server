@@ -513,9 +513,10 @@
 					// Sleeping for some amount of time will equalize the rate.
 					// So, solve this for $x:  $size / ($x + $difftime) = $limit
 					$amount = ($size - ($limit * $difftime)) / $limit;
+					$amount += 0.001;
 
 					if ($async)  return microtime(true) + $amount;
-					else  usleep($amount);
+					else  usleep($amount * 1000000);
 				}
 			}
 
@@ -926,7 +927,7 @@
 								$options2["debug_callback"] = $state["options"]["debug_callback"];
 								$options2["debug_callback_opts"] = $state["options"]["debug_callback_opts"];
 							}
-							$state["proxyresponse"] = self::InitResponseState($state["fp"], $state["debug"], $options2, $state["startts"], $state["timeout"], $state["result"], $state["close"], $state["nextread"]);
+							$state["proxyresponse"] = self::InitResponseState($state["fp"], $state["debug"], $options2, $state["startts"], $state["timeout"], $state["result"], false, $state["nextread"]);
 
 							$state["state"] = "proxy_connect_response";
 
@@ -1508,6 +1509,7 @@
 				$proxyprotocol = ($proxysecure && !$async ? (isset($options["proxyprotocol"]) ? strtolower($options["proxyprotocol"]) : "ssl") : "tcp");
 				if (function_exists("stream_get_transports") && !in_array($proxyprotocol, stream_get_transports()))  return array("success" => false, "error" => self::HTTPTranslate("The desired transport proxy protocol '%s' is not installed.", $proxyprotocol), "errorcode" => "proxy_transport_not_installed");
 				$proxyhost = str_replace(" ", "-", self::HeaderValueCleanup($proxyurl["host"]));
+				if ($proxyhost === "")  return array("success" => false, "error" => self::HTTPTranslate("The specified proxy URL is not a URL.  Prefix 'proxyurl' with http:// or https://"), "errorcode" => "invalid_proxy_url");
 				$proxyport = ((int)$proxyurl["port"] ? (int)$proxyurl["port"] : ($proxysecure ? 443 : 80));
 				$proxypath = ($proxyurl["path"] == "" ? "/" : $proxyurl["path"]);
 				$proxyusername = $proxyurl["loginusername"];
