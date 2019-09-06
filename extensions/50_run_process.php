@@ -146,6 +146,8 @@
 						unset($result["info"]["env"]["X_ASYNC_STDCMD_TOKEN"]);
 					}
 
+					unset($result["info"]["env"]["PAS_SECRET"]);
+
 					// The process started successfully.
 					$ts = microtime(true);
 					$result["tag"] = $tag;
@@ -646,6 +648,8 @@
 
 		public function ProcessRequest($method, $path, $client, &$data)
 		{
+			global $wsserver;
+
 			if (!is_array($data))  return false;
 
 			if (!isset($data["action"]))
@@ -703,6 +707,7 @@
 						{
 							$cinfo = array(
 								"channel" => $cid,
+								"realpid" => $info["pid"],
 								"tag" => $info["tag"],
 								"state" => $info["state"],
 								"stats" => $info["stats"],
@@ -722,6 +727,54 @@
 
 							$result["channels"][] = $cinfo;
 						}
+					}
+				}
+			}
+			else if ($data["action"] == "get_info")
+			{
+				if (!isset($data["channel"]))  $result = array("channel" => 0, "success" => false, "error" => "Missing 'channel'.", "errorcode" => "missing_channel");
+				else if (!is_numeric($data["channel"]) || !isset($this->processes[$data["channel"]]))  $result = array("channel" => 0, "success" => false, "error" => "Invalid 'channel'.", "errorcode" => "invalid_channel");
+				else
+				{
+					$channel = (int)$data["channel"];
+					$info = &$this->processes[$channel];
+
+					if ($info["state"] === "queued")
+					{
+						$result = array(
+							"channel" => $channel,
+							"success" => true,
+							"action" => "get_info",
+							"tag" => $info["tag"],
+							"state" => $info["state"],
+							"stats" => $info["stats"]
+						);
+
+						if ($client->appdata["auth"] === true)  $result["data"] = $info["data"];
+					}
+					else if ($info["state"] !== "error")
+					{
+						$result = array(
+							"channel" => $channel,
+							"success" => true,
+							"action" => "get_info",
+							"realpid" => $info["pid"],
+							"tag" => $info["tag"],
+							"state" => $info["state"],
+							"stats" => $info["stats"],
+							"attached" => ($info["attached"] !== false),
+							"stdinopen" => $info["stdinopen"],
+							"stdindata" => strlen($info["stdindata"]),
+							"stdoutdata" => strlen($info["stdoutdata"]),
+							"stderrdata" => strlen($info["stderrdata"]),
+							"stdcmdopen" => $info["stdcmdopen"],
+							"stdcmddata" => strlen($info["stdcmddata"]),
+							"hadstderr" => $info["hadstderr"],
+							"scrollback" => count($info["scrollback"]),
+							"extra" => $info["extra"]
+						);
+
+						if ($client->appdata["auth"] === true)  $result["info"] = $info["info"];
 					}
 				}
 			}
@@ -920,7 +973,7 @@
 				else if (!is_numeric($data["channel"]) || !isset($this->processes[$data["channel"]]))  $result = array("channel" => 0, "success" => false, "error" => "Invalid 'channel'.", "errorcode" => "invalid_channel");
 				else if ($this->processes[$data["channel"]]["state"] !== "running")  $result = array("channel" => 0, "success" => false, "error" => "The specified channel's process is not running.", "errorcode" => "process_not_running");
 				else if (!$this->processes[$data["channel"]]["stdinopen"])  $result = array("channel" => 0, "success" => false, "error" => "The specified channel's stdin pipe is closed.", "errorcode" => "stdin_closed");
-				else if ($this->processes[$data["channel"]]["attached"] !== false && $this->processes[$data["channel"]]["attached"] !== $client->id)  $result = array("channel" => 0, "success" => false, "error" => "Another client is attached to the specified channel.", "errorcode" => "client_mismatch");
+				else if ($this->processes[$data["channel"]]["attached"] !== false && ($method !== false || $this->processes[$data["channel"]]["attached"] !== $client->id))  $result = array("channel" => 0, "success" => false, "error" => "Another client is attached to the specified channel.", "errorcode" => "client_mismatch");
 				else if (!isset($data["data"]))  $result = array("channel" => 0, "success" => false, "error" => "Missing 'data'.", "errorcode" => "missing_data");
 				else if (!is_string($data["data"]))  $result = array("channel" => 0, "success" => false, "error" => "Invalid 'data'.  Expected a string.", "errorcode" => "invalid_data");
 				else
@@ -955,6 +1008,18 @@
 						"success" => true,
 						"action" => "send_stdin"
 					);
+
+					// Don't flood the access log with stdin data requests.
+					if ($this->processes[$data["channel"]]["attached"] !== false && $method === false)
+					{
+						if (isset($data["msg_id"]))  $result["msg_id"] = $data["msg_id"];
+
+						// Send the response.
+						$data2 = json_encode($result, JSON_UNESCAPED_SLASHES);
+						$client->websocket->Write($data2, $GLOBALS["result2"]["data"]["opcode"]);
+
+						return true;
+					}
 				}
 			}
 			else if ($data["action"] == "close_stdin")
@@ -982,7 +1047,7 @@
 				else if (!is_numeric($data["channel"]) || !isset($this->processes[$data["channel"]]))  $result = array("channel" => 0, "success" => false, "error" => "Invalid 'channel'.", "errorcode" => "invalid_channel");
 				else if ($this->processes[$data["channel"]]["state"] !== "running")  $result = array("channel" => 0, "success" => false, "error" => "The specified channel's process is not running.", "errorcode" => "process_not_running");
 				else if (!$this->processes[$data["channel"]]["stdcmdopen"])  $result = array("channel" => 0, "success" => false, "error" => "The specified channel's stdcmd pipe is closed.", "errorcode" => "stdcmd_closed");
-				else if ($this->processes[$data["channel"]]["attached"] !== false && $this->processes[$data["channel"]]["attached"] !== $client->id)  $result = array("channel" => 0, "success" => false, "error" => "Another client is attached to the specified channel.", "errorcode" => "client_mismatch");
+				else if ($this->processes[$data["channel"]]["attached"] !== false && ($method !== false || $this->processes[$data["channel"]]["attached"] !== $client->id))  $result = array("channel" => 0, "success" => false, "error" => "Another client is attached to the specified channel.", "errorcode" => "client_mismatch");
 				else if (!isset($data["data"]))  $result = array("channel" => 0, "success" => false, "error" => "Missing 'data'.", "errorcode" => "missing_data");
 				else if (!is_string($data["data"]))  $result = array("channel" => 0, "success" => false, "error" => "Invalid 'data'.  Expected a string.", "errorcode" => "invalid_data");
 				else
@@ -991,7 +1056,7 @@
 
 					$data2 = base64_decode($data["data"]);
 					$this->processes[$channel]["stdcmddata"] .= $data2;
-					$info["stats"]["stdcmd"] += strlen($data2);
+					$this->processes[$channel]["stats"]["stdcmd"] += strlen($data2);
 
 					$this->NotifyMonitors($channel, "send_stdcmd", false);
 
@@ -1050,7 +1115,7 @@
 				if (!isset($data["channel"]))  $result = array("channel" => 0, "success" => false, "error" => "Missing 'channel'.", "errorcode" => "missing_channel");
 				else if (!is_numeric($data["channel"]) || !isset($this->processes[$data["channel"]]))  $result = array("channel" => 0, "success" => false, "error" => "Invalid 'channel'.", "errorcode" => "invalid_channel");
 				else if ($this->processes[$data["channel"]]["state"] === "running")  $result = array("channel" => 0, "success" => false, "error" => "The specified channel's process is still running.", "errorcode" => "process_running");
-				else if ($this->processes[$data["channel"]]["attached"] !== false && $this->processes[$data["channel"]]["attached"] !== $client->id)  $result = array("channel" => 0, "success" => false, "error" => "Another client is attached to the specified channel.", "errorcode" => "client_mismatch");
+				else if ($this->processes[$data["channel"]]["attached"] !== false && ($method !== false || $this->processes[$data["channel"]]["attached"] !== $client->id))  $result = array("channel" => 0, "success" => false, "error" => "Another client is attached to the specified channel.", "errorcode" => "client_mismatch");
 				else
 				{
 					// Remove the channel from the list.
