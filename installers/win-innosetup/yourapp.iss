@@ -5,28 +5,24 @@
 #define BusinessName "Your Business or Name"
 #define BusinessURL "http://www.yourwebsite.com/"
 #define AppName "Your App"
+#define AppFilename "Your-App"
 #define AppVer "1.0"
 #define AppURL "http://www.yourwebsite.com/product/"
-#define AppCopyright "(C) 2018 Your Business or Name"
+#define AppCopyright "(C) 2019 Your Business or Name"
 #define SupportURL "http://www.yourwebsite.com/contact/"
 #define AppBase "yourapp"
 
 ; Check http://windows.php.net/ for your PHP version to determine which of the following Visual C++ Runtime lines to uncomment.
 
-; Visual C++ 2012 Runtimes.
+; Visual C++ 2012 (VC12) Runtimes.
 ; #define VCDetect "msvcr110.dll"
 ; #define VCx86URL "https://download.microsoft.com/download/1/6/B/16B06F60-3B20-4FF2-B699-5E9B7962F9AE/VSU_4/vcredist_x86.exe"
 ; #define VCx64URL "https://download.microsoft.com/download/1/6/B/16B06F60-3B20-4FF2-B699-5E9B7962F9AE/VSU_4/vcredist_x64.exe"
 
-; Visual C++ 2015 Runtimes.
-; #define VCDetect "vcruntime140.dll"
-; #define VCx86URL "https://download.microsoft.com/download/6/A/A/6AA4EDFF-645B-48C5-81CC-ED5963AEAD48/vc_redist.x86.exe"
-; #define VCx64URL "https://download.microsoft.com/download/6/A/A/6AA4EDFF-645B-48C5-81CC-ED5963AEAD48/vc_redist.x64.exe"
-
-; Visual C++ 2017 Runtimes.
+; Visual C++ 2015, 2017, and 2019 (VC14, VC15, VC16) Runtimes.
 #define VCDetect "vcruntime140.dll"
-#define VCx86URL "https://aka.ms/vs/15/release/VC_redist.x86.exe"
-#define VCx64URL "https://aka.ms/vs/15/release/VC_redist.x64.exe"
+#define VCx86URL "https://aka.ms/vs/16/release/VC_redist.x86.exe"
+#define VCx64URL "https://aka.ms/vs/16/release/VC_redist.x64.exe"
 
 ; Uncomment the next line to allow the application to be installed in a "Portable Apps" fashion (beta).
 ; #define PortableAppMode
@@ -61,11 +57,14 @@ DefaultGroupName={#AppName}
 LicenseFile={#AppBase}-license.txt
 ; Minimum version supported by PHP is Windows XP.
 MinVersion=5.1
-OutputBaseFilename={#AppName}-{#AppVer}
+OutputBaseFilename={#AppFilename}-{#AppVer}
 OutputDir=installers\win-innosetup\Output
 PrivilegesRequired=admin
 #ifexist "setup.ico"
 SetupIconFile=setup.ico
+UninstallDisplayIcon={uninstallexe}
+#else
+UninstallDisplayIcon={app}\{#AppBase}.ico
 #endif
 #ifdef PortableAppMode
 Uninstallable=not IsTaskSelected('portablemode')

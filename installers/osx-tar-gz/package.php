@@ -162,10 +162,10 @@
 
 	file_put_contents($stagingpath . "/Contents/Info.plist", $data);
 
-	echo "Generating " . $appname . "-" . $packageinfo["app_ver"] . "-osx.tar.gz...\n";
+	echo "Generating " . $packageinfo["app_filename"] . "-" . $packageinfo["app_ver"] . "-osx.tar.gz...\n";
 	chdir($rootpath);
-	@unlink($appname . "-" . $packageinfo["app_ver"] . "-osx.tar.gz");
-	system("tar czvf " . escapeshellarg($appname . "-" . $packageinfo["app_ver"] . "-osx.tar.gz") . ($mac ? " " : " --owner=0 --group=0 ") . escapeshellarg($packageinfo["app_name"] . " " . $packageinfo["app_ver"] . " Installer.app/"));
+	@unlink($packageinfo["app_filename"] . "-" . $packageinfo["app_ver"] . "-osx.tar.gz");
+	system("tar czvf " . escapeshellarg($packageinfo["app_filename"] . "-" . $packageinfo["app_ver"] . "-osx.tar.gz") . ($mac ? " " : " --owner=0 --group=0 ") . escapeshellarg($packageinfo["app_name"] . " " . $packageinfo["app_ver"] . " Installer.app/"));
 
 	echo "Cleaning up...\n";
 	DirHelper::Delete($stagingpath);

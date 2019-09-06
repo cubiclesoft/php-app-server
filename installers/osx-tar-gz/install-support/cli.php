@@ -207,6 +207,7 @@
 				else
 				{
 					echo $prompt;
+					fflush(STDOUT);
 					$line = fgets(STDIN);
 					if ($line === false || ($line === "" && feof(STDIN)))  exit();
 

@@ -56,7 +56,7 @@
 
 	// Prepare the staging area.
 	echo "Preparing staging area...\n";
-	$stagingpath = $rootpath . "/" . $appname . "-" . $packageinfo["app_ver"];
+	$stagingpath = $rootpath . "/" . $packageinfo["app_filename"] . "-" . $packageinfo["app_ver"];
 	DirHelper::Delete($stagingpath);
 	mkdir($stagingpath, 0775);
 
@@ -77,10 +77,10 @@
 	chmod($stagingpath . "/uninstall.sh", 0775);
 	copy($packagefile, $stagingpath . "/package.json");
 
-	echo "Generating " . $appname . "-" . $packageinfo["app_ver"] . "-linux.tar.gz...\n";
+	echo "Generating " . $packageinfo["app_filename"] . "-" . $packageinfo["app_ver"] . "-linux.tar.gz...\n";
 	chdir($rootpath);
-	@unlink($appname . "-" . $packageinfo["app_ver"] . "-linux.tar.gz");
-	system("tar czvf " . escapeshellarg($appname . "-" . $packageinfo["app_ver"] . "-linux.tar.gz") . ($mac ? " " : " --owner=0 --group=0 ") . escapeshellarg($appname . "-" . $packageinfo["app_ver"] . "/"));
+	@unlink($packageinfo["app_filename"] . "-" . $packageinfo["app_ver"] . "-linux.tar.gz");
+	system("tar czvf " . escapeshellarg($packageinfo["app_filename"] . "-" . $packageinfo["app_ver"] . "-linux.tar.gz") . ($mac ? " " : " --owner=0 --group=0 ") . escapeshellarg($packageinfo["app_filename"] . "-" . $packageinfo["app_ver"] . "/"));
 
 	echo "Cleaning up...\n";
 	DirHelper::Delete($stagingpath);
