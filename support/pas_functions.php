@@ -104,12 +104,9 @@
 
 	function PAS_InitStartupFile(&$sdir, &$sfile)
 	{
-		$sdir = sys_get_temp_dir();
-		$sdir = str_replace("\\", "/", $sdir);
-		if (substr($sdir, -1) !== "/")  $sdir .= "/";
-		$sdir .= "php_app_server_start_" . getmypid() . "_" . microtime(true) . "/";
-		@mkdir($sdir, 0750, true);
-		$sfile = $sdir . "info.json";
+		$sdir = ProcessHelper::MakeTempDir("php_app_server_start", 0750);
+
+		$sfile = $sdir . "/info.json";
 		file_put_contents($sfile, "");
 		@chmod($sfile, 0640);
 	}
