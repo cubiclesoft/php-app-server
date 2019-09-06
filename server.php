@@ -117,11 +117,7 @@
 //			$fpmbin = ProcessHelper::FindExecutable("php-fpm7.2", "/usr/sbin");
 			if ($fpmbin === false)  WriteStartupInfo(array("success" => false, "error" => "Unable to start server due to missing executable.  Expected 'php-cgi' or 'php-fpm'.", "errorcode" => "missing_php_cgi"));
 
-			$fpmdir = sys_get_temp_dir();
-			$fpmdir = str_replace("\\", "/", $fpmdir);
-			if (substr($fpmdir, -1) !== "/")  $fpmdir .= "/";
-			$fpmdir .= "php_app_server_fpm_" . getmypid() . "_" . microtime(true);
-			@mkdir($fpmdir, 0700, true);
+			$fpmdir = ProcessHelper::MakeTempDir("php_app_server_fpm", 0700);
 
 			// Generate a PHP-FPM configuration file.
 			$data = "[global]\n";
@@ -259,11 +255,7 @@
 	$webserver = new StatsWebServer();
 
 	// Enable writing files to the system.
-	$cachedir = sys_get_temp_dir();
-	$cachedir = str_replace("\\", "/", $cachedir);
-	if (substr($cachedir, -1) !== "/")  $cachedir .= "/";
-	$cachedir .= "php_app_server_" . getmypid() . "_" . microtime(true) . "/";
-	@mkdir($cachedir, 0770, true);
+	$cachedir = WebServer::MakeTempDir("php_app_server");
 	$webserver->SetCacheDir($cachedir);
 
 	// Enable longer active client times.
@@ -774,7 +766,6 @@
 								// On Windows, an intermediate process is used to enable non-blocking transfer of data to and from the process.
 								$options2 = array(
 									"stdin" => (!$client->requestcomplete),
-									"tcpstdin" => false,
 									"dir" => $docroot,
 									"env" => $env
 								);
