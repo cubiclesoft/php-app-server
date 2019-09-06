@@ -18,6 +18,15 @@
 			$authtoken = self::GetAuthToken();
 
 			$this->SetAccessInfo($url, "", $authtoken);
+
+			// Register security token cookies.
+			if (isset($_COOKIE))
+			{
+				foreach ($_COOKIE as $key => $val)
+				{
+					$this->web->SetCookie(array("domain" => $_SERVER["SERVER_NAME"], "path" => "/", "name" => $key, "value" => $val));
+				}
+			}
 		}
 
 		public static function GetURL($protocol = "ws")

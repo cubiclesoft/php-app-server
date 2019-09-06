@@ -135,7 +135,20 @@ Here's an example of starting a PHP script called 'test.php' using the PHP SDK:
 	$cmd = escapeshellarg(PAS_GetPHPBinary());
 	$cmd .= " " . escapeshellarg(realpath($_SERVER["PAS_ROOT"] . "/support/scripts/test.php"));
 
-	$options = array();
+	$options = array(
+//		"rules" => array(
+//			"start" => time() + 5,
+//			"maxqueued" => 3
+//		),
+//		"stdin" => false,
+//		"dir" => $_SERVER["PAS_ROOT"] . "/support/scripts/",
+//		"env" => ProcessHelper::GetCleanEnvironment(),
+//		"extraenv" => array("PASSWORD" => "supersecret"),
+//		"extra" => array(
+//			"title" => "Custom window title",
+//			"inputmode" => "readline"
+//		)
+	);
 
 	// Start the process.
 	require_once $rootpath . "/support/pas_run_process_sdk.php";
@@ -211,6 +224,7 @@ Note that TerminalManager and ExecTerminal are not required for managing long-ru
 Here is the full list of TerminalManager options:
 
 * fullscreen - A boolean indicating whether or not an attached ExecTerminal starts in fullscreen mode (Default is false).
+* fullscreenbutton - A boolean indicating whether or not to display the button that allows the user to toggle fullscreen mode (Default is true).
 * autoattach - A boolean indicating whether or not to automatically attach to channels and create ExecTerminals (Default is true).
 * manualdetach - A boolean indicating whether or not to display the manual attach/detach button on the title bar (Default is false).
 * terminatebutton - A boolean indicating whether or not to display the button that allows the user to forcefully terminate the process (Default is true).

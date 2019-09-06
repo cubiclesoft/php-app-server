@@ -184,7 +184,7 @@
 		// Internal functions.
 
 		var UpdateTerminalFit = function() {
-			if (!allowterminalfit)  return;
+			if (!allowterminalfit || !$this)  return;
 
 			$this.terminal.fit();
 
@@ -194,7 +194,7 @@
 			var scrollint, scrollequal = 0;
 			var ScrollToBottom = function() {
 //console.log('scrolling: ' + $this.terminal._core.buffer.ydisp + ', ' + $this.terminal._core.buffer.ybase + ', ' + ($this.terminal._core._userScrolling ? 'yes' : 'no') + ', ' + ($this.terminal._core._writeInProgress ? 'yes' : 'no'));
-				if ($this.terminal._core.buffer.ydisp != $this.terminal._core.buffer.ybase || $this.terminal._core._userScrolling || $this.terminal._core._writeInProgress)
+				if ($this && ($this.terminal._core.buffer.ydisp != $this.terminal._core.buffer.ybase || $this.terminal._core._userScrolling || $this.terminal._core._writeInProgress))
 				{
 					$this.terminal.scrollLines(10000000);
 
@@ -694,15 +694,16 @@
 
 			if (updateall)
 			{
+				if ($this.settings.fullscreen)  $this.ShowFullscreen();
+				else  $this.ExitFullscreen();
+
 				if ($this.settings.fullscreenbutton)
 				{
-					if ($this.settings.fullscreen)  $this.ShowFullscreen();
-					else  $this.ExitFullscreen();
+					elems.button_fullscreen.classList.remove('ext-run-process-hidden');
+					elems.button_fullscreen_exit.classList.remove('ext-run-process-hidden');
 				}
 				else
 				{
-					$this.ExitFullscreen();
-
 					elems.button_fullscreen.classList.add('ext-run-process-hidden');
 					elems.button_fullscreen_exit.classList.add('ext-run-process-hidden');
 				}
@@ -1008,6 +1009,19 @@
 			return monitoring;
 		};
 
+		// Retrieves information for a specific channel.
+		// Clears the channel of scrollback lines.
+		$this.GetChannelInfo = function(channel, callback) {
+			var msg = {
+				action: 'get_info',
+				channel: channel
+			};
+
+			SendMessage(msg, function(data) {
+				if (callback)  callback.call($this, data);
+			});
+		};
+
 		// Retrieves the channel list.  To avoid race conditions, start monitoring for changes before calling this function.
 		$this.GetChannelList = function(tag, listcallback) {
 			var msg = {
@@ -1181,6 +1195,7 @@
 
 		var defaults = {
 			fullscreen: false,
+			fullscreenbutton: true,
 			autoattach: true,
 			manualdetach: false,
 			terminatebutton: true,
@@ -1324,14 +1339,14 @@
 			if (terminals[channel].settings.stdinopen)  sdk.SendChannelStdin(channel, line, (secureinput ? false : settings.historylines));
 		};
 
-		var TerminalKeyHandler = function(key, e) {
-			var channel = this.settings.context.channel;
-
-			if (terminals[channel].settings.stdinopen && (terminals[channel].settings.inputmode === 'interactive' || terminals[channel].settings.inputmode === 'interactive_echo'))
-			{
-				sdk.SendChannelStdin(channel, key, false);
-			}
-		};
+//		var TerminalKeyHandler = function(key, e) {
+//			var channel = this.settings.context.channel;
+//
+//			if (terminals[channel].settings.stdinopen && (terminals[channel].settings.inputmode === 'interactive' || terminals[channel].settings.inputmode === 'interactive_echo'))
+//			{
+//				sdk.SendChannelStdin(channel, key, false);
+//			}
+//		};
 
 		var TerminalDataHandler = function(data) {
 			var channel = this.settings.context.channel;
@@ -1387,6 +1402,7 @@
 
 						attached: msg.attached,
 						fullscreen: settings.fullscreen,
+						fullscreenbutton: settings.fullscreenbutton,
 
 						attachedbutton: (settings.manualdetach ? AttachButtonToggle : null),
 						terminatebutton: (settings.terminatebutton && sdk.IsAllowed('terminate') ? TerminateButtonHandler : null),
@@ -1398,7 +1414,7 @@
 						inputmode: (msg.stdinopen ? (msg.extra && msg.extra.inputmode ? msg.extra.inputmode : 'readline') : 'none'),
 						onenter: ReadlineEnterHandler,
 
-						onkey: TerminalKeyHandler,
+//						onkey: TerminalKeyHandler,
 						ondata: TerminalDataHandler,
 						onresize: TerminalResizeHandler,
 

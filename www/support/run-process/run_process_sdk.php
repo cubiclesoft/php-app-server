@@ -31,6 +31,11 @@
 			return $this->RunAPI("GET", "?action=test");
 		}
 
+		public function GetChannelInfo($channel)
+		{
+			return $this->RunAPI("GET", "?action=get_info&channel=" . (int)$channel);
+		}
+
 		public function GetChannelList($tag = false)
 		{
 			return $this->RunAPI("GET", "?action=list" . ($tag !== false ? "&tag=" . urlencode($tag) : ""));
