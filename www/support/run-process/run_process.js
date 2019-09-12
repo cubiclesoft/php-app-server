@@ -1192,6 +1192,7 @@
 		var $this = this;
 		var mgr_id = nextmgr_id + '_tm_js';
 		nextmgr_id++;
+		var allowattach = true;
 
 		var defaults = {
 			fullscreen: false,
@@ -1373,7 +1374,7 @@
 
 			if (msg.action === 'attach')
 			{
-				if (msg.attachextra !== mgr_id)  return;
+				if (msg.attachextra !== mgr_id || !allowattach)  return;
 
 				if (terminals[channel])
 				{
@@ -1495,11 +1496,17 @@
 			if (settings.onmessage)  settings.onmessage.call($this, msg);
 		};
 
+		var PreventAttaching = function(e) {
+			if (!e.defaultPrevented && !e['returnValue'])  allowattach = false;
+		};
+
 		sdk.addEventListener('connect', ConnectHandler);
 		sdk.addEventListener('disconnect', DisconnectHandler);
 		sdk.addEventListener('error', MessageErrorHandler);
 		sdk.addEventListener('monitor', MonitorHandler);
 		sdk.addEventListener('message', MessageHandler);
+
+		window.addEventListener('beforeunload', PreventAttaching);
 
 		// Public functions.
 
@@ -1525,6 +1532,8 @@
 			sdk.removeEventListener('error', MessageErrorHandler);
 			sdk.removeEventListener('monitor', MonitorHandler);
 			sdk.removeEventListener('message', MessageHandler);
+
+			window.removeEventListener('beforeunload', PreventAttaching);
 
 			for (var channel in terminals)
 			{
