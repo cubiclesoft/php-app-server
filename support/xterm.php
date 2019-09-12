@@ -7,6 +7,7 @@
 	//   https://vt100.net/docs/vt510-rm/contents.html
 	//   https://www.xfree86.org/current/ctlseqs.html
 	//   https://github.com/xtermjs/xterm.js/
+	//   https://docs.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences
 	class XTerm
 	{
 		// CSI escape codes.
