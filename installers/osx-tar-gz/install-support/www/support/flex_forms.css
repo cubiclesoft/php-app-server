@@ -1,14 +1,19 @@
-div.ff_formwrap div.ff_formwrapinner div.formitem {
+.ff_formwrap .ff_formwrapinner .formitem {
 	margin-top: 1.0em;
 }
 
-div.ff_formwrap div.ff_formwrapinner div.formitemtitle {
+.ff_formwrap .ff_formwrapinner .formitemtitle {
 	color: #222222;
 	margin-bottom: 0.2em;
 	font-weight: bold;
 }
 
-div.ff_formwrap div.ff_formwrapinner div.formitem div.formitemdata input.text {
+.ff_formwrap .ff_formwrapinner .formfields > hr {
+	border: 0 none;
+	border-top: 1px dashed #BBBBBB;
+}
+
+.ff_formwrap .ff_formwrapinner .formitem .formitemdata input.text {
 	box-sizing: border-box;
 	width: 100%;
 	font-size: 0.9em;
@@ -16,15 +21,15 @@ div.ff_formwrap div.ff_formwrapinner div.formitem div.formitemdata input.text {
 	border: 1px solid #BBBBBB;
 }
 
-div.ff_formwrap div.ff_formwrapinner div.formitem div.formitemdata input.text:focus {
+.ff_formwrap .ff_formwrapinner .formitem .formitemdata input.text:focus {
 	border: 1px solid #888888;
 }
 
-div.ff_formwrap div.ff_formwrapinner div.formitem div.formitemdata input.text:hover {
+.ff_formwrap .ff_formwrapinner .formitem .formitemdata input.text:hover {
 	border: 1px solid #888888;
 }
 
-div.ff_formwrap div.ff_formwrapinner div.formitem div.formitemdata textarea {
+.ff_formwrap .ff_formwrapinner .formitem .formitemdata textarea {
 	box-sizing: border-box;
 	width: 100%;
 	font-size: 0.9em;
@@ -33,91 +38,99 @@ div.ff_formwrap div.ff_formwrapinner div.formitem div.formitemdata textarea {
 	resize: vertical;
 }
 
-div.ff_formwrap div.ff_formwrapinner div.formitem div.formitemdata textarea:focus {
+.ff_formwrap .ff_formwrapinner .formitem .formitemdata textarea:focus {
 	border: 1px solid #888888;
 }
 
-div.ff_formwrap div.ff_formwrapinner div.formitem div.formitemdata textarea:hover {
+.ff_formwrap .ff_formwrapinner .formitem .formitemdata textarea:hover {
 	border: 1px solid #888888;
 }
 
-div.ff_formwrap div.ff_formwrapinner div.formitem div.formitemdata div.radioitemwrap {
+.ff_formwrap .ff_formwrapinner .formitem .formitemdata .radioitemwrap {
 	margin-left: 1.7em;
 	text-indent: -1.7em;
 	margin-bottom: 0.3em;
 }
 
-div.ff_formwrap div.ff_formwrapinner div.formitem div.formitemdata div.checkboxitemwrap {
+.ff_formwrap .ff_formwrapinner .formitem .formitemdata .checkboxitemwrap {
 	margin-left: 1.7em;
 	text-indent: -1.7em;
 	margin-bottom: 0.3em;
 }
 
-div.ff_formwrap div.ff_formwrapinner div.formitem div.formitemdata select {
+.ff_formwrap .ff_formwrapinner .formitem .formitemdata select {
 	box-sizing: border-box;
 	width: 100%;
 	font-size: 0.9em;
 	border: 1px solid #BBBBBB;
 }
 
-div.ff_formwrap div.ff_formwrapinner div.formitem div.formitemdata select:focus {
+.ff_formwrap .ff_formwrapinner .formitem .formitemdata select:focus {
 	border: 1px solid #888888;
 }
 
-div.ff_formwrap div.ff_formwrapinner div.formitem div.formitemdata select:hover {
+.ff_formwrap .ff_formwrapinner .formitem .formitemdata select:hover {
 	border: 1px solid #888888;
 }
 
-div.ff_formwrap div.ff_formwrapinner div.formitem div.formitemdata div.staticwrap {
+.ff_formwrap .ff_formwrapinner .formitem .formitemdata .staticwrap {
 	margin-left: 0.5em;
 }
 
-div.ff_formwrap div.ff_formwrapinner div.formitem div.formitemdesc {
+.ff_formwrap .ff_formwrapinner .formitem .formitemdesc {
 	color: #333333;
 	margin-bottom: 0.2em;
 	margin-left: 0.5em;
 	font-size: 0.9em;
 }
 
-div.ff_formwrap div.ff_formwrapinner div.formitem div.formitemresult {
+.ff_formwrap .ff_formwrapinner .formitem .formitemresult {
 	margin-left: 0.5em;
 }
 
-div.ff_formwrap div.ff_formwrapinner div.formitem div.formitemresult div.formitemerror {
+.ff_formwrap .ff_formwrapinner .formitem .formitemresult .formitemerror {
 	background: url('flex_forms_error.png') 0 0.1em no-repeat;
 	padding-left: 25px;
 	color: #A94442;
 	font-weight: bold;
 }
 
-div.ff_formwrap div.ff_formwrapinner div.fieldtablewrap table td {
+.ff_formwrap .ff_formwrapinner .fieldtablewrap > table.rowwrap {
+	border-collapse: collapse;
+}
+
+.ff_formwrap .ff_formwrapinner .fieldtablewrap > table.rowwrap > tbody > tr > td {
 	padding-right: 1.0em;
 	vertical-align: top;
 }
 
-div.ff_formwrap div.ff_formwrapinner div.fieldtablewrap table td.nowrap {
+.ff_formwrap .ff_formwrapinner .fieldtablewrap .formitemtitle {
 	white-space: nowrap;
 }
 
-div.ff_formwrap div.ff_formwrapinner div.formsubmit {
+.ff_formwrap .ff_formwrapinner .nowrap {
+	white-space: nowrap;
+}
+
+.ff_formwrap .ff_formwrapinner .formsubmit {
 	margin-top: 1.2em;
 }
 
-div.ff_formwrap div.ff_formwrapinner div.formsubmit input {
+.ff_formwrap .ff_formwrapinner .formsubmit input {
 	padding: 0.2em 0.5em;
 	font-weight: bold;
 	font-size: 1.0em;
 	color: #1F1F1F;
 }
 
-div.ff_formmessagewrap div.ff_formmessagewrapinner div.message {
+.ff_formmessagewrap .ff_formmessagewrapinner .message {
 	border: 1px solid transparent;
 	border-radius: 4px;
 	margin-top: 1.0em;
 	padding: 0.5em 0.7em;
 }
 
-div.ff_formmessagewrap div.ff_formmessagewrapinner div.messagesuccess {
+.ff_formmessagewrap .ff_formmessagewrapinner .messagesuccess {
 	border-color: #B2DBA1;
 	background-color: #DFF0D8;
 	background-image: linear-gradient(to bottom, #DFF0D8 0px, #C8E5BC 100%);
@@ -125,7 +138,7 @@ div.ff_formmessagewrap div.ff_formmessagewrapinner div.messagesuccess {
 	color: #3C763D;
 }
 
-div.ff_formmessagewrap div.ff_formmessagewrapinner div.messagewarning {
+.ff_formmessagewrap .ff_formmessagewrapinner .messagewarning {
 	border-color: #F5E79E;
 	background-color: #FCF8E3;
 	background-image: linear-gradient(to bottom, #FCF8E3 0px, #F8EFC0 100%);
@@ -133,7 +146,7 @@ div.ff_formmessagewrap div.ff_formmessagewrapinner div.messagewarning {
 	color: #8A6D3B;
 }
 
-div.ff_formmessagewrap div.ff_formmessagewrapinner div.messageerror {
+.ff_formmessagewrap .ff_formmessagewrapinner .messageerror {
 	border-color: #DCA7A7;
 	background-color: #F2DEDE;
 	background-image: linear-gradient(to bottom, #F2DEDE 0px, #E7C3C3 100%);
@@ -141,7 +154,7 @@ div.ff_formmessagewrap div.ff_formmessagewrapinner div.messageerror {
 	color: #A94442;
 }
 
-div.ff_formmessagewrap div.ff_formmessagewrapinner div.messageinfo {
+.ff_formmessagewrap .ff_formmessagewrapinner .messageinfo {
 	border-color: #9ACFEA;
 	background-color: #D9EDF7;
 	background-image: linear-gradient(to bottom, #D9EDF7 0px, #B9DEF0 100%);
