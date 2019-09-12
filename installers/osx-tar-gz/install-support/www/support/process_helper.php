@@ -1,6 +1,6 @@
 <?php
 	// Process helper functions.
-	// (C) 2018 CubicleSoft.  All Rights Reserved.
+	// (C) 2019 CubicleSoft.  All Rights Reserved.
 
 	class ProcessHelper
 	{
@@ -17,10 +17,64 @@
 			foreach ($paths as $path)
 			{
 				$path = trim($path);
-				if ($path !== false && file_exists($path . "/" . $file))  return str_replace(array("\\", "/"), DIRECTORY_SEPARATOR, $path . "/" . $file);
+				if ($path !== "" && file_exists($path . "/" . $file))  return str_replace(array("\\", "/"), DIRECTORY_SEPARATOR, $path . "/" . $file);
 			}
 
 			return false;
+		}
+
+		public static function NormalizeCommand($cmd)
+		{
+			$file = "";
+			$y = strlen($cmd);
+			$x = 0;
+			$state = "normal";
+			while ($x < $y)
+			{
+				if ($state === "double")
+				{
+					if ($cmd{$x} === "\"")  $state = "normal";
+					else
+					{
+						if ($x + 2 < $y && $cmd{$x} === "\\" && $cmd{$x + 1} === "\\" && $cmd{$x + 1} === "\"")  $x++;
+
+						$file .= $cmd{$x};
+					}
+				}
+				else if ($state === "single")
+				{
+					if ($cmd{$x} === "'")  $state = "normal";
+					else  $file .= $cmd{$x};
+				}
+				else
+				{
+					if ($cmd{$x} === "\"")  $state = "double";
+					else if ($cmd{$x} === "'")  $state = "single";
+					else if ($cmd{$x} === " ")  break;
+					else
+					{
+						if ($cmd{$x} === "\\")  $x++;
+
+						if ($x < $y)  $file .= $cmd{$x};
+					}
+				}
+
+				$x++;
+			}
+
+			$exefile = self::FindExecutable($file);
+
+			if ($exefile === false)
+			{
+				$os = php_uname("s");
+				$windows = (strtoupper(substr($os, 0, 3)) == "WIN");
+
+				if ($windows)  $exefile = self::FindExecutable($file . ".exe");
+			}
+
+			if ($exefile === false)  return $cmd;
+
+			return escapeshellarg($exefile) . substr($cmd, $x);
 		}
 
 		public static function GetUserInfoByID($uid)
@@ -109,6 +163,18 @@
 			return ($group !== false ? $group["name"] : "");
 		}
 
+		public static function MakeTempDir($prefix, $perms = 0770)
+		{
+			$dir = sys_get_temp_dir();
+			$dir = str_replace("\\", "/", $dir);
+			if (substr($dir, -1) !== "/")  $dir .= "/";
+			$dir .= $prefix . "_" . getmypid() . "_" . microtime(true);
+			@mkdir($dir, 0770, true);
+			@chmod($dir, $perms);
+
+			return $dir;
+		}
+
 		public static function GetCleanEnvironment()
 		{
 			$ignore = array(
@@ -130,6 +196,19 @@
 			}
 
 			return $result;
+		}
+
+		public static function ConnectTCPPipe($host, $port, $pipenum, $token)
+		{
+			$context = stream_context_create();
+
+			$fp = stream_socket_client("tcp://" . $host . ":" . (int)$port, $errornum, $errorstr, 3, STREAM_CLIENT_CONNECT, $context);
+			if ($fp === false)  return array("success" => false, "error" => "Unable to connect to the server.", "errorcode" => "connect_failed");
+
+			$result = fwrite($fp, $token . chr($pipenum));
+			if ($result != strlen($token) + 1)  return array("success" => false, "error" => "Unable to send token data the server.", "errorcode" => "write_failed");
+
+			return array("success" => true, "fp" => $fp);
 		}
 
 		public static function StartTCPServer()
@@ -293,7 +372,7 @@
 			if ($windows)
 			{
 				// Don't open a socket if the application really does want a pipe.
-				if (!isset($options["tcpstdin"]))  $options["tcpstdin"] = false;
+				if (!isset($options["tcpstdin"]))  $options["tcpstdin"] = true;
 				if (!isset($options["tcpstdout"]))  $options["tcpstdout"] = true;
 				if (!isset($options["tcpstderr"]))  $options["tcpstderr"] = true;
 				$tcpused = ((isset($procpipes[0]) && is_array($procpipes[0]) && $procpipes[0][0] === "pipe" && $options["tcpstdin"]) || (isset($procpipes[1]) && is_array($procpipes[1]) && $procpipes[1][0] === "pipe" && $options["tcpstdout"]) || (isset($procpipes[2]) && is_array($procpipes[2]) && $procpipes[2][0] === "pipe" && $options["tcpstderr"]));
@@ -415,11 +494,13 @@
 			return array("success" => true, "proc" => $proc, "pid" => $pinfo["pid"], "pipes" => $pipes, "info" => array("cmd" => $cmd, "dir" => (isset($options["dir"]) ? $options["dir"] : NULL), "env" => $options["env"]));
 		}
 
-		public static function Wait($proc, &$pipes, $stdindata = "", $timeout = -1)
+		public static function Wait($proc, &$pipes, $stdindata = "", $timeout = -1, $outputcallback = false)
 		{
 			$stdindata = (string)$stdindata;
 			$stdoutdata = "";
+			$stdoutpos = 0;
 			$stderrdata = "";
+			$stderrpos = 0;
 
 			$startts = microtime(true);
 			do
@@ -452,6 +533,7 @@
 				else
 				{
 					$exceptfps = NULL;
+					if ($timeleft === false)  $timeleft = 3;
 					$result = @stream_select($readfps, $writefps, $exceptfps, ($timeleft > 1 ? 1 : 0), ($timeleft > 1 ? 0 : ($timeleft - (int)$timeleft) * 1000000));
 					if ($result === false)  break;
 
@@ -475,6 +557,24 @@
 						else
 						{
 							$stdoutdata .= $data;
+
+							if (is_callable($outputcallback))
+							{
+								if ($stderrpos < strlen($stderrdata) && strpos($stderrdata, "\n", $stderrpos) !== false && strpos($stdoutdata, "\n", $stdoutpos) !== false)
+								{
+									$pos = strrpos($stdoutdata, "\n") + 1;
+									call_user_func($outputcallback, substr($stdoutdata, $stdoutpos, $pos - $stdoutpos), 1);
+									$stdoutpos = $pos;
+
+									$pos = strrpos($stderrdata, "\n") + 1;
+									call_user_func($outputcallback, substr($stderrdata, $stderrpos, $pos - $stderrpos), 2);
+									$stderrpos = $pos;
+								}
+
+								$pos = strlen($stdoutdata);
+								call_user_func($outputcallback, substr($stdoutdata, $stdoutpos, $pos - $stdoutpos), 1);
+								$stdoutpos = $pos;
+							}
 						}
 					}
 
@@ -510,6 +610,8 @@
 
 				if ($timeleft === 0)  break;
 			} while ($proc !== false || count($pipes));
+
+			if (is_callable($outputcallback) && $stderrpos < strlen($stderrdata))  call_user_func($outputcallback, substr($stderrdata, $stderrpos), 2);
 
 			return array("success" => true, "proc" => $proc, "stdinleft" => $stdindata, "stdout" => $stdoutdata, "stderr" => $stderrdata);
 		}
