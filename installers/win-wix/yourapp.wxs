@@ -2,18 +2,19 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
 	<!--
 	Basic WiX wrapper script for Inno Setup.  Requires a valid Inno Setup executable with /MSI support.  See README.md for more information.
-	(C) 2018 CubicleSoft.  All Rights Reserved.
+	(C) 2019 CubicleSoft.  All Rights Reserved.
 	-->
 
 	<!-- Adjust these defines for your app. -->
 	<?define BusinessName = "Your Business or Name" ?>
 	<?define BusinessURL = "http://www.yourwebsite.com/" ?>
 	<?define AppName = "Your App" ?>
+	<?define AppFilename = "Your-App" ?>
 	<?define AppVer = "1.0" ?>
 	<?define AppURL = "http://www.yourwebsite.com/product/" ?>
-	<?define AppCopyright = "(C) 2018 Your Business or Name" ?>
+	<?define AppCopyright = "(C) 2019 Your Business or Name" ?>
 	<?define SupportURL = "http://www.yourwebsite.com/contact/" ?>
-	<?define SourceSetupFile = "..\win-innosetup\Output\$(var.AppName)-$(var.AppVer).exe" ?>
+	<?define SourceSetupFile = "..\win-innosetup\Output\$(var.AppFilename)-$(var.AppVer).exe" ?>
 	<?define UpgradeGUID = "YOUR_UPGRADE_GUID" ?>
 
 	<!-- There shouldn't generally be any need to modify the rest of this file. -->
