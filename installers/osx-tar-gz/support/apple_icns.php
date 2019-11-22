@@ -60,8 +60,8 @@
 				if (!$result["success"])  return $result;
 
 				$data = $result["data"];
-				if ($srcwidth > 2048)  $srcwidth = 2048;
-				if ($srcwidth > 2048)  $srcheight = 2048;
+				$srcwidth = 2048;
+				$srcheight = 2048;
 			}
 
 			// No resizing takes place here if the image is a square image.
@@ -210,8 +210,12 @@
 
 		protected static function GetBytes(&$data, &$x, $y, $size)
 		{
-			$result = (string)substr($data, $x, $size);
-			if ($x + $size > $y)  $result .= str_repeat("\x00", $x + $size - $y);
+			if ($size < 0)  return "";
+
+			if ($x >= $y)  $result = str_repeat("\x00", $size);
+			else if ($x + $size >= $y)  $result = (string)substr($data, $x, $y - $x) . str_repeat("\x00", $x + $size - $y);
+			else  $result = (string)substr($data, $x, $size);
+
 			$x += $size;
 
 			return $result;
