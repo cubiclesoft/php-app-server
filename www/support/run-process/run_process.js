@@ -426,7 +426,9 @@
 
 		elems.readline.addEventListener('keydown', ReadlineKeydownHandler);
 
-		var EnableSecureInput = function() {
+		var EnableSecureInput = function(e) {
+			e.preventDefault();
+
 			elems.readline.setAttribute('type', 'password');
 
 			elems.button_secure_input_off.classList.add('ext-run-process-hidden');
@@ -435,7 +437,9 @@
 			secureinput = true;
 		};
 
-		var DisableSecureInput = function() {
+		var DisableSecureInput = function(e) {
+			e.preventDefault();
+
 			elems.readline.setAttribute('type', 'text');
 
 			elems.button_secure_input_off.classList.remove('ext-run-process-hidden');
@@ -541,6 +545,8 @@
 
 		// Button click callbacks.
 		var AttachedDetachedClickHandler = function(e) {
+			e.preventDefault();
+
 			// Hide both buttons and remove the handler.  This allows for time to synchronize with a host without a user trying to alter the attach state again.
 			elems.button_attached.classList.add('ext-run-process-hidden');
 			elems.button_detached.classList.add('ext-run-process-hidden');
@@ -555,6 +561,8 @@
 		elems.button_detached.addEventListener('click', AttachedDetachedClickHandler);
 
 		var TerminateClickHandler = function(e) {
+			e.preventDefault();
+
 			if ($this.settings.connected && $this.settings.running && $this.settings.terminatebutton && confirm(Translate('Are you sure you want to terminate this process?')))
 			{
 				elems.button_terminate.classList.add('ext-run-process-hidden');
@@ -569,6 +577,8 @@
 		elems.button_terminate.addEventListener('click', TerminateClickHandler);
 
 		var RemoveClickHandler = function(e) {
+			e.preventDefault();
+
 			if ($this.settings.removebutton)  $this.settings.removebutton.call($this, e);
 		};
 
@@ -721,7 +731,9 @@
 			if (updateall)  $this.terminal.write('\x1B]1000;' + $this.settings.inputmode + '\x07');
 		};
 
-		$this.ShowFullscreen = function() {
+		$this.ShowFullscreen = function(e) {
+			if (e)  e.preventDefault();
+
 			elems.terminalwrap.classList.add('ext-run-process-terminal-fullscreen');
 			document.body.classList.add('ext-run-process-fullscreen');
 
@@ -736,7 +748,9 @@
 			UpdateTerminalFit();
 		};
 
-		$this.ExitFullscreen = function() {
+		$this.ExitFullscreen = function(e) {
+			if (e)  e.preventDefault();
+
 			elems.terminalwrap.classList.remove('ext-run-process-terminal-fullscreen');
 			document.body.classList.remove('ext-run-process-fullscreen');
 
