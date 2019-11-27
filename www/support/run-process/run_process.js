@@ -427,7 +427,7 @@
 		elems.readline.addEventListener('keydown', ReadlineKeydownHandler);
 
 		var EnableSecureInput = function(e) {
-			e.preventDefault();
+			if (e)  e.preventDefault();
 
 			elems.readline.setAttribute('type', 'password');
 
@@ -438,7 +438,7 @@
 		};
 
 		var DisableSecureInput = function(e) {
-			e.preventDefault();
+			if (e)  e.preventDefault();
 
 			elems.readline.setAttribute('type', 'text');
 
