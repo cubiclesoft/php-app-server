@@ -27,6 +27,7 @@ Features
 * Pre-made boilerplate installer scripts for Windows (EXE and MSI), Mac (.app bundle in a .tar.gz), and Linux (.tar.gz) with custom EULA and clean update support.
 * Tiny installer sizes.  From 85KB (Linux, .tar.gz) up to 10MB (Windows, .exe).  When paying per GB of transfer, every byte counts.
 * Branded to look like your own software application.  Your app's custom icon is placed in the Start menu, application launcher, desktop/dock, etc.
+* Optionally integrates with the open source, high-performance [CubicleSoft Software License Server](https://github.com/cubiclesoft/php-license-server).  Quickly and easily enable license management in your software product.
 * Fully isolated, zero conflict software.
 * Compatible with [CubicleSoft software](https://github.com/cubiclesoft).
 * Has a liberal open source license.  MIT or LGPL, your choice.
