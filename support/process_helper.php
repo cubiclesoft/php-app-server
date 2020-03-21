@@ -1,6 +1,6 @@
 <?php
 	// Process helper functions.
-	// (C) 2019 CubicleSoft.  All Rights Reserved.
+	// (C) 2020 CubicleSoft.  All Rights Reserved.
 
 	class ProcessHelper
 	{
@@ -33,29 +33,29 @@
 			{
 				if ($state === "double")
 				{
-					if ($cmd{$x} === "\"")  $state = "normal";
+					if ($cmd[$x] === "\"")  $state = "normal";
 					else
 					{
-						if ($x + 2 < $y && $cmd{$x} === "\\" && $cmd{$x + 1} === "\\" && $cmd{$x + 1} === "\"")  $x++;
+						if ($x + 2 < $y && $cmd[$x] === "\\" && $cmd[$x + 1] === "\\" && $cmd[$x + 1] === "\"")  $x++;
 
-						$file .= $cmd{$x};
+						$file .= $cmd[$x];
 					}
 				}
 				else if ($state === "single")
 				{
-					if ($cmd{$x} === "'")  $state = "normal";
-					else  $file .= $cmd{$x};
+					if ($cmd[$x] === "'")  $state = "normal";
+					else  $file .= $cmd[$x];
 				}
 				else
 				{
-					if ($cmd{$x} === "\"")  $state = "double";
-					else if ($cmd{$x} === "'")  $state = "single";
-					else if ($cmd{$x} === " ")  break;
+					if ($cmd[$x] === "\"")  $state = "double";
+					else if ($cmd[$x] === "'")  $state = "single";
+					else if ($cmd[$x] === " ")  break;
 					else
 					{
-						if ($cmd{$x} === "\\")  $x++;
+						if ($cmd[$x] === "\\")  $x++;
 
-						if ($x < $y)  $file .= $cmd{$x};
+						if ($x < $y)  $file .= $cmd[$x];
 					}
 				}
 
@@ -788,7 +788,7 @@
 			$result = $sy - $uy;
 			for ($ux = 0; $ux < $uy; $ux++)
 			{
-				$result |= ord($userinput{$ux}) ^ ord($secret{$sx});
+				$result |= ord($userinput[$ux]) ^ ord($secret[$sx]);
 				$sx = ($sx + 1) % $sy;
 			}
 

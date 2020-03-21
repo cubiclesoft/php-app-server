@@ -1,6 +1,6 @@
 <?php
 	// FastCGI client class.
-	// (C) 2018 CubicleSoft.  All Rights Reserved.
+	// (C) 2020 CubicleSoft.  All Rights Reserved.
 
 	class FastCGI
 	{
@@ -542,18 +542,18 @@
 						if (strlen($record["content"]) < 3)  return array("success" => false, "error" => self::FCGITranslate("Client sent invalid record content."), "errorcode" => "invalid_record_content");
 
 						// Ignore requests to start the same ID.
-						if ($this->requests[$record["reqid"]])  continue;
+						if ($this->requests[$record["reqid"]])  break;
 
 						// Deny multiplexing if it isn't being supported.
 						if (count($this->requests) && !$this->multiplex)
 						{
 							$this->EndRequest($record["reqid"], 0, self::PROTOCOL_STATUS_CANT_MPX_CONN);
 
-							continue;
+							break;
 						}
 
 						$role = unpack("n", substr($record["content"], 0, 2))[1];
-						$flags = ord($record["content"]{2});
+						$flags = ord($record["content"][2]);
 						if ($flags & 0x01 == 0)  $this->emptydisconnect = true;
 
 						// Deny request if there isn't room for the request.
@@ -561,7 +561,7 @@
 						{
 							$this->EndRequest($record["reqid"], 0, self::PROTOCOL_STATUS_OVERLOADED);
 
-							continue;
+							break;
 						}
 
 						// Deny the request if the requested role is impossible.
@@ -569,7 +569,7 @@
 						{
 							$this->EndRequest($record["reqid"], 0, self::PROTOCOL_STATUS_UNKNOWN_ROLE);
 
-							continue;
+							break;
 						}
 
 						$request = new stdClass();
@@ -596,7 +596,7 @@
 						if ($this->client)  return array("success" => false, "error" => self::FCGITranslate("The server attempted to abort a request."), "errorcode" => "server_mode_only");
 						if ($record["reqid"] == 0)  return array("success" => false, "error" => self::FCGITranslate("Client sent an invalid request ID to abort."), "errorcode" => "invalid_request_id");
 
-						if (!isset($this->requests[$record["reqid"]]))  continue;
+						if (!isset($this->requests[$record["reqid"]]))  break;
 
 						$this->requests[$record["reqid"]]->abort = true;
 						$this->readyrequests[$record["reqid"]] = true;
@@ -609,7 +609,7 @@
 						if ($record["reqid"] == 0)  return array("success" => false, "error" => self::FCGITranslate("Server sent an invalid request ID to end."), "errorcode" => "invalid_request_id");
 						if (strlen($record["content"]) < 5)  return array("success" => false, "error" => self::FCGITranslate("Server sent invalid record content."), "errorcode" => "invalid_record_content");
 
-						if (!isset($this->requests[$record["reqid"]]))  continue;
+						if (!isset($this->requests[$record["reqid"]]))  break;
 
 						$request = $this->requests[$record["reqid"]];
 
@@ -619,7 +619,7 @@
 						$request->stderropen = false;
 						$request->ended = true;
 						$request->appstatus = unpack("N", substr($record["content"], 0, 4))[1];
-						$request->protocolstatus = ord($record["content"]{4});
+						$request->protocolstatus = ord($record["content"][4]);
 
 						$this->readyrequests[$record["reqid"]] = true;
 
@@ -630,10 +630,10 @@
 						if ($this->client)  return array("success" => false, "error" => self::FCGITranslate("The server attempted to send params."), "errorcode" => "server_mode_only");
 						if ($record["reqid"] == 0)  return array("success" => false, "error" => self::FCGITranslate("Client sent an invalid request ID for adding to 'params'."), "errorcode" => "invalid_request_id");
 
-						if (!isset($this->requests[$record["reqid"]]))  continue;
+						if (!isset($this->requests[$record["reqid"]]))  break;
 
 						$request = $this->requests[$record["reqid"]];
-						if (!is_string($request->params))  continue;
+						if (!is_string($request->params))  break;
 
 						if ($record["content"] === "")  $request->params = self::ParseNameValues($request->params);
 						else  $request->params .= $record["content"];
@@ -647,10 +647,10 @@
 						if ($this->client)  return array("success" => false, "error" => self::FCGITranslate("The server attempted to send stdin."), "errorcode" => "server_mode_only");
 						if ($record["reqid"] == 0)  return array("success" => false, "error" => self::FCGITranslate("Client sent an invalid request ID for adding to 'stdin'."), "errorcode" => "invalid_request_id");
 
-						if (!isset($this->requests[$record["reqid"]]))  continue;
+						if (!isset($this->requests[$record["reqid"]]))  break;
 
 						$request = $this->requests[$record["reqid"]];
-						if (!$request->stdinopen)  continue;
+						if (!$request->stdinopen)  break;
 
 						if ($record["content"] === "")  $request->stdinopen = false;
 						else  $request->stdin .= $record["content"];
@@ -664,10 +664,10 @@
 						if (!$this->client)  return array("success" => false, "error" => self::FCGITranslate("The client attempted to send stdout."), "errorcode" => "client_mode_only");
 						if ($record["reqid"] == 0)  return array("success" => false, "error" => self::FCGITranslate("Server sent an invalid request ID for adding to 'stdout'."), "errorcode" => "invalid_request_id");
 
-						if (!isset($this->requests[$record["reqid"]]))  continue;
+						if (!isset($this->requests[$record["reqid"]]))  break;
 
 						$request = $this->requests[$record["reqid"]];
-						if (!$request->stdoutopen || $request->ended)  continue;
+						if (!$request->stdoutopen || $request->ended)  break;
 
 						if ($record["content"] === "")  $request->stdoutopen = false;
 						else  $request->stdout .= $record["content"];
@@ -681,10 +681,10 @@
 						if (!$this->client)  return array("success" => false, "error" => self::FCGITranslate("The client attempted to send stderr."), "errorcode" => "client_mode_only");
 						if ($record["reqid"] == 0)  return array("success" => false, "error" => self::FCGITranslate("Server sent an invalid request ID for adding to 'stderr'."), "errorcode" => "invalid_request_id");
 
-						if (!isset($this->requests[$record["reqid"]]))  continue;
+						if (!isset($this->requests[$record["reqid"]]))  break;
 
 						$request = $this->requests[$record["reqid"]];
-						if (!$request->stderropen || $request->ended)  continue;
+						if (!$request->stderropen || $request->ended)  break;
 
 						if ($record["content"] === "")  $request->stderropen = false;
 						else  $request->stderr .= $record["content"];
@@ -698,10 +698,10 @@
 						if ($this->client)  return array("success" => false, "error" => self::FCGITranslate("The server attempted to send filter data."), "errorcode" => "server_mode_only");
 						if ($record["reqid"] == 0)  return array("success" => false, "error" => self::FCGITranslate("Client sent an invalid request ID for adding to 'data'."), "errorcode" => "invalid_request_id");
 
-						if (!isset($this->requests[$record["reqid"]]))  continue;
+						if (!isset($this->requests[$record["reqid"]]))  break;
 
 						$request = $this->requests[$record["reqid"]];
-						if (!$request->dataopen)  continue;
+						if (!$request->dataopen)  break;
 
 						if ($record["content"] === "")  $request->dataopen = false;
 						else  $request->data .= $record["content"];
@@ -767,11 +767,11 @@
 			if (strlen($this->readdata) < 8)  return false;
 
 			// Version, 1 byte type, 2 bytes request ID (big endian), 2 bytes content length, 1 byte padding length, 1 byte reserved (unused)
-			$ver = ord($this->readdata{0});
-			$type = ord($this->readdata{1});
+			$ver = ord($this->readdata[0]);
+			$type = ord($this->readdata[1]);
 			$reqid = unpack("n", substr($this->readdata, 2, 2))[1];
 			$contentlen = unpack("n", substr($this->readdata, 4, 2))[1];
-			$paddinglen = ord($this->readdata{6});
+			$paddinglen = ord($this->readdata[6]);
 
 			if (strlen($this->readdata) < 8 + $contentlen + $paddinglen)  return false;
 
@@ -799,23 +799,23 @@
 			$y = strlen($data);
 			while ($x < $y)
 			{
-				$namelen = ord($data{$x});
+				$namelen = ord($data[$x]);
 				if ($namelen < 128)  $x++;
 				else if ($x + 4 > $y)  break;
 				else
 				{
-					$data{$x} = chr($namelen & 0x7F);
-					$namelen = unpack("N", substr($data{$x}, $x, 4))[1];
+					$data[$x] = chr($namelen & 0x7F);
+					$namelen = unpack("N", substr($data[$x], $x, 4))[1];
 					$x += 4;
 				}
 
-				$vallen = ord($data{$x});
+				$vallen = ord($data[$x]);
 				if ($vallen < 128)  $x++;
 				else if ($x + 4 > $y)  break;
 				else
 				{
-					$data{$x} = chr($vallen & 0x7F);
-					$vallen = unpack("N", substr($data{$x}, $x, 4))[1];
+					$data[$x] = chr($vallen & 0x7F);
+					$vallen = unpack("N", substr($data[$x], $x, 4))[1];
 					$x += 4;
 				}
 

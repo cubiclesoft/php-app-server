@@ -1,6 +1,6 @@
 <?php
 	// CubicleSoft PHP WebSocket class.
-	// (C) 2017 CubicleSoft.  All Rights Reserved.
+	// (C) 2020 CubicleSoft.  All Rights Reserved.
 
 	// Implements RFC 6455 (WebSocket protocol).
 	// Requires the CubicleSoft PHP HTTP/HTTPS class.
@@ -463,14 +463,14 @@
 		{
 			if (strlen($this->readdata) < 2)  return false;
 
-			$chr = ord($this->readdata{0});
+			$chr = ord($this->readdata[0]);
 			$fin = (($chr & 0x80) ? true : false);
 			$rsv1 = (($chr & 0x40) ? true : false);
 			$rsv2 = (($chr & 0x20) ? true : false);
 			$rsv3 = (($chr & 0x10) ? true : false);
 			$opcode = $chr & 0x0F;
 
-			$chr = ord($this->readdata{1});
+			$chr = ord($this->readdata[1]);
 			$mask = (($chr & 0x80) ? true : false);
 			$length = $chr & 0x7F;
 			if ($length == 126)  $start = 4;
@@ -500,7 +500,7 @@
 				// Decode the payload.
 				for ($x = 0; $x < $length; $x++)
 				{
-					$payload{$x} = chr(ord($payload{$x}) ^ ord($maskingkey{$x % 4}));
+					$payload[$x] = chr(ord($payload[$x]) ^ ord($maskingkey[$x % 4]));
 				}
 			}
 
@@ -565,7 +565,7 @@
 				$y = strlen($payload);
 				for ($x = 0; $x < $y; $x++)
 				{
-					$payload{$x} = chr(ord($payload{$x}) ^ ord($maskingkey{$x % 4}));
+					$payload[$x] = chr(ord($payload[$x]) ^ ord($maskingkey[$x % 4]));
 				}
 			}
 
@@ -598,7 +598,7 @@
 				$result = 0;
 				for ($x = 0; $x < 8; $x++)
 				{
-					$result = ($result * 256) + ord($data{$x});
+					$result = ($result * 256) + ord($data[$x]);
 				}
 
 				return $result;
