@@ -13,6 +13,10 @@
 	border-top: 1px dashed #BBBBBB;
 }
 
+.ff_formwrap .ff_formwrapinner .formitem .formitemdata input, .ff_formwrap .ff_formwrapinner .formitem .formitemdata textarea, .ff_formwrap .ff_formwrapinner .formitem .formitemdata select {
+	outline: none;
+}
+
 .ff_formwrap .ff_formwrapinner .formitem .formitemdata input.text {
 	box-sizing: border-box;
 	width: 100%;
@@ -121,6 +125,7 @@
 	font-weight: bold;
 	font-size: 1.0em;
 	color: #1F1F1F;
+	outline: none;
 }
 
 .ff_formmessagewrap .ff_formmessagewrapinner .message {
