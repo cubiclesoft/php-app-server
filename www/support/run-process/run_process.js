@@ -1,7 +1,10 @@
 // Long running process Javascript SDK.
-// (C) 2019 CubicleSoft.  All Rights Reserved.
+// (C) 2020 CubicleSoft.  All Rights Reserved.
 
 (function() {
+	// Prevent multiple instances.
+	if (window.hasOwnProperty('ExecTerminal'))  return;
+
 	var EscapeHTML = function(text) {
 		var map = {
 			'&': '&amp;',
@@ -14,12 +17,13 @@
 		return text.replace(/[&<>"']/g, function(m) { return map[m]; });
 	}
 
-	var CreateNode = function(node, classes, attrs, styles) {
-		var elem = document.createElement(node);
+	var CreateNode = function(tag, classes, attrs, styles) {
+		var elem = document.createElement(tag);
 
 		if (classes)
 		{
-			for (var x = 0; x < classes.length; x++)  elem.classList.add(classes[x]);
+			if (typeof classes === 'string')  elem.className = classes;
+			else  elem.className = classes.join(' ');
 		}
 
 		if (attrs)  Object.assign(elem, attrs);
@@ -30,10 +34,12 @@
 	};
 
 	function DebounceWithThrottle(func, debouncewait, throttlewait, callatstart, callatend) {
-		var debouncetimeout, throttletimeout;
+		var debouncetimeout, throttletimeout, args;
 
-		return function() {
-			var context = this, args = arguments;
+		var result = function() {
+			var context = this;
+
+			args = Array.prototype.slice.call(arguments);
 
 			if (callatstart && !debouncetimeout)  func.apply(context, [].concat(args, 'start'));
 
@@ -46,24 +52,28 @@
 
 			clearTimeout(debouncetimeout);
 			debouncetimeout = setTimeout(function() {
-				clearTimeout(throttletimeout);
+				clearInterval(throttletimeout);
 				throttletimeout = null;
 				debouncetimeout = null;
 
 				if (callatend)  func.apply(context, [].concat(args, 'end'));
 			}, debouncewait);
 		};
+
+		result.Cancel = function() {
+			clearTimeout(debouncetimeout);
+			clearInterval(throttletimeout);
+			throttletimeout = null;
+			debouncetimeout = null;
+		};
+
+		return result;
 	};
 
 	var addon_fit = false;
 
-	window.ExecTerminal = function(parentelem, options) {
-		if (this === window)
-		{
-			console.error('[ExecTerminal] Error:  Did you forget to use the "new" keyword?');
-
-			return;
-		}
+	var ExecTerminal = function(parentelem, options) {
+		if (!(this instanceof ExecTerminal))  return new ExecTerminal(parentelem, options);
 
 		if (!window.Terminal)
 		{
@@ -221,7 +231,7 @@
 			window.requestAnimationFrame(UpdateTerminalFit);
 		}, 500, 500, true, true);
 
-		window.addEventListener('resize', WindowResizeHandler);
+		window.addEventListener('resize', WindowResizeHandler, true);
 
 		// Handle user resizing with the vertical resizer bar.
 		var draginfo = null;
@@ -822,9 +832,15 @@
 
 		$this.SettingsUpdated(true);
 	};
+
+	// Export ExecTerminal.
+	window.ExecTerminal = ExecTerminal;
 })();
 
 (function() {
+	// Prevent multiple instances.
+	if (window.hasOwnProperty('RunProcessSDK'))  return;
+
 	var FormatStr = function(format) {
 		var args = Array.prototype.slice.call(arguments, 1);
 
@@ -833,13 +849,8 @@
 		});
 	};
 
-	window.RunProcessSDK = function(url, authuser, authtoken) {
-		if (this === window)
-		{
-			console.error('[RunProcessSDK] Error:  Did you forget to use the "new" keyword?');
-
-			return;
-		}
+	var RunProcessSDK = function(url, authuser, authtoken) {
+		if (!(this instanceof RunProcessSDK))  return new RunProcessSDK(url, authuser, authtoken);
 
 		var triggers = {};
 		var ws, ready = false, queued = [], sent = {}, allowed = {}, monitoring = false, attached = {}, nextid = 1;
@@ -981,6 +992,11 @@
 		$this.addEventListener = function(eventname, callback) {
 			if (!triggers[eventname])  triggers[eventname] = [];
 
+			for (var x in triggers[eventname])
+			{
+				if (triggers[eventname][x] === callback)  return;
+			}
+
 			triggers[eventname].push(callback);
 		};
 
@@ -991,11 +1007,15 @@
 			{
 				if (triggers[eventname][x] === callback)
 				{
-					delete triggers[eventname][x];
+					triggers[eventname].splice(x, 1);
 
 					return;
 				}
 			}
+		};
+
+		$this.hasEventListener = function(eventname) {
+			return (triggers[eventname] && triggers[eventname].length);
 		};
 
 		// Public SDK functions.
@@ -1185,19 +1205,15 @@
 		};
 	};
 
+
 	// Sets up a fully automated terminal manager that tracks each channel and routes input from and output to Xterm.js terminal windows.
 	var nextmgr_id = 1;
-	window.TerminalManager = function(sdk, parentelem, options) {
+	var TerminalManager = function(sdk, parentelem, options) {
+		if (!(this instanceof TerminalManager))  return new TerminalManager(sdk, parentelem, options);
+
 		if (!window.Terminal)
 		{
 			console.error('[RunProcessSDK::TerminalManager] Error:  Did you forget to load "xterm.js"?  Also be sure to load "addons/fit.js" so that terminals can be stretched to fit the space.');
-
-			return;
-		}
-
-		if (this === window)
-		{
-			console.error('[RunProcessSDK::TerminalManager] Error:  Did you forget to use the "new" keyword?');
 
 			return;
 		}
@@ -1557,4 +1573,8 @@
 			terminals = [];
 		};
 	};
+
+	// Export RunProcessSDK and TerminalManager.
+	window.RunProcessSDK = RunProcessSDK;
+	window.TerminalManager = TerminalManager;
 })();

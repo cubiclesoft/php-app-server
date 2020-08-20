@@ -90,7 +90,7 @@ $(function() {
 
 		// Go through every property on `window` and filter it out if
 		// the iframe's `window` also has it.
-		console.log(Object.keys(window).filter(function (key) {
+		console.log(Object.keys(window).filter(function(key) {
 			return !pristineWindow.hasOwnProperty(key)
 		}));
 
