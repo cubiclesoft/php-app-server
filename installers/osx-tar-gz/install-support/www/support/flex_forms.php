@@ -1,6 +1,6 @@
 <?php
 	// FlexForms is the flexible, security-centric class for generating web forms.  Extracted from Barebones CMS with concepts from Admin Pack and SSO server and represents the culminaton of 7 years of precision development.
-	// (C) 2017 CubicleSoft.  All Rights Reserved.
+	// (C) 2020 CubicleSoft.  All Rights Reserved.
 
 	class FlexForms
 	{
@@ -190,11 +190,11 @@
 		{
 			if (!isset($this->state["jsoutput"]["jquery"]))
 			{
-				if ($delayjs)  $this->state["js"]["jquery"] = array("mode" => "src", "dependency" => false, "src" => $this->state["supporturl"] . "/jquery-3.1.1.min.js", "detect" => "jQuery");
+				if ($delayjs)  $this->state["js"]["jquery"] = array("mode" => "src", "dependency" => false, "src" => $this->state["supporturl"] . "/jquery-3.5.0.min.js", "detect" => "jQuery");
 				else
 				{
 ?>
-	<script type="text/javascript" src="<?php echo htmlspecialchars($this->state["supporturl"] . "/jquery-3.1.1.min.js"); ?>"></script>
+	<script type="text/javascript" src="<?php echo htmlspecialchars($this->state["supporturl"] . "/jquery-3.5.0.min.js"); ?>"></script>
 <?php
 
 					$this->state["jsoutput"]["jquery"] = true;
@@ -395,13 +395,14 @@
 
 			$this->OutputFormCSS();
 
+			$this->state["formnum"]++;
+
 ?>
 	<div class="ff_formwrap">
 	<div class="ff_formwrapinner">
 <?php
 			if (isset($options["submit"]) || (isset($options["useform"]) && $options["useform"]))
 			{
-				$this->state["formnum"]++;
 				$this->state["formid"] = $this->state["formidbase"] . $this->state["formnum"];
 ?>
 		<form class="ff_form" id="<?php echo $this->state["formid"]; ?>"<?php if (isset($options["formmode"]) && $options["formmode"] === "get")  { ?> method="get"<?php } else { ?> method="post" enctype="multipart/form-data"<?php } ?> action="<?php echo htmlspecialchars($this->state["action"]); ?>">
@@ -445,6 +446,7 @@
 			{
 ?>
 		<div class="formfields<?php if (count($options["fields"]) == 1 && !isset($options["fields"][0]["title"]) && !isset($options["fields"][0]["htmltitle"]))  echo " alt"; ?><?php if ($this->state["responsive"])  echo " formfieldsresponsive"; ?>">
+			<div class="formfieldsinner">
 <?php
 				foreach ($options["fields"] as $num => $field)
 				{
@@ -467,6 +469,7 @@
 
 				$this->CleanupFields();
 ?>
+			</div>
 		</div>
 <?php
 			}
@@ -1001,7 +1004,7 @@
 									foreach ($row as $col)
 									{
 ?>
-						<div<?php foreach ($headcolattrs as $key => $val)  echo " " . $key . "=\"" . htmlspecialchars($val) . "\""; ?>><?php echo (isset($field["htmlcols"]) && $field["htmlcols"] ? self::FFTranslate(isset($field["cols"][$num2]) ? $field["cols"][$num2] : "") : htmlspecialchars(self::FFTranslate(isset($field["cols"][$num2]) ? $field["cols"][$num2] : ""))); ?></div>
+						<div<?php if (isset($headcolattrs[$num2]))  { foreach ($headcolattrs[$num2] as $key => $val)  echo " " . $key . "=\"" . htmlspecialchars($val) . "\""; } ?>><?php echo (isset($field["htmlcols"]) && $field["htmlcols"] ? self::FFTranslate(isset($field["cols"][$num2]) ? $field["cols"][$num2] : "") : htmlspecialchars(self::FFTranslate(isset($field["cols"][$num2]) ? $field["cols"][$num2] : ""))); ?></div>
 						<div<?php if (isset($colattrs2[$num2]))  { foreach ($colattrs2[$num2] as $key => $val)  echo " " . $key . "=\"" . htmlspecialchars($val) . "\""; } ?>><?php echo $col; ?></div>
 <?php
 										$num2++;
@@ -1009,6 +1012,7 @@
 ?>
 					</div>
 <?php
+									$rownum++;
 									$altrow = !$altrow;
 								}
 
@@ -1104,15 +1108,17 @@
 			}
 ?>
 		<div class="formsubmit">
+			<div class="formsubmitinner">
 <?php
 			foreach ($options["submit"] as $name => $val)
 			{
 				if (is_int($name) && isset($options["submitname"]))  $name = $options["submitname"];
 ?>
-			<input class="submit" type="submit"<?php if ($name !== "")  echo " name=\"" . htmlspecialchars(isset($options["hashnames"]) && $options["hashnames"] ? $this->GetHashedFieldName($name) : $name) . "\""; ?> value="<?php echo htmlspecialchars(self::FFTranslate($val)); ?>" />
+				<input class="submit" type="submit"<?php if ($name !== "")  echo " name=\"" . htmlspecialchars(isset($options["hashnames"]) && $options["hashnames"] ? $this->GetHashedFieldName($name) : $name) . "\""; ?> value="<?php echo htmlspecialchars(self::FFTranslate($val)); ?>" />
 <?php
 			}
 ?>
+			</div>
 		</div>
 <?php
 		}
@@ -1122,147 +1128,244 @@
 			if ($scripttag)  echo "<script type=\"text/javascript\">\n";
 
 ?>
-window.FlexForms = window.FlexForms || {
-	version: '<?php echo self::JSSafe($this->version); ?>',
+(function() {
+	if (window.hasOwnProperty('FlexForms'))  return;
 
-	modules: {},
+	// FlexForms base class.
+	var FlexFormsInternal = function() {
+		if (!(this instanceof FlexFormsInternal))  return new FlexFormsInternal();
 
-	Extend: function(target, src) {
-		for (var x in src)  { target[x] = src[x]; }
-	},
-
-	cssoutput: {},
-
-	LoadCSS: function(name, url, cssmedia) {
+		var triggers = {}, version = '', cssoutput = {}, cssleft = 0, jsqueue = {}, ready = false, initialized = false;
 		var $this = this;
 
-		if ($this.cssoutput[name] !== undefined)  return;
+		// Internal functions.
+		var DispatchEvent = function(eventname, params) {
+			if (!triggers[eventname])  return;
 
-		if ($this.version !== '')  url += (url.indexOf('?') > -1 ? '&' : '?') + $this.version;
+			triggers[eventname].forEach(function(callback) {
+				if (Array.isArray(params))  callback.apply($this, params);
+				else  callback.call($this, params);
+			});
+		};
 
-		if (document.createStyleSheet)
-		{
-			var sheet = document.createStyleSheet(url);
-			sheet.media = (cssmedia != undefined ? cssmedia : 'all');
-		}
-		else
-		{
+		// Public DOM-style functions.
+		$this.addEventListener = function(eventname, callback) {
+			if (!triggers[eventname])  triggers[eventname] = [];
+
+			for (var x in triggers[eventname])
+			{
+				if (triggers[eventname][x] === callback)  return;
+			}
+
+			triggers[eventname].push(callback);
+		};
+
+		$this.removeEventListener = function(eventname, callback) {
+			if (!triggers[eventname])  return;
+
+			for (var x in triggers[eventname])
+			{
+				if (triggers[eventname][x] === callback)
+				{
+					triggers[eventname].splice(x, 1);
+
+					return;
+				}
+			}
+		};
+
+		$this.hasEventListener = function(eventname) {
+			return (triggers[eventname] && triggers[eventname].length);
+		};
+
+		$this.modules = {};
+
+		$this.SetVersion = function(newver) {
+			version = newver;
+		};
+
+		$this.GetVersion = function() {
+			return version;
+		};
+
+		$this.RegisterCSSOutput = function(info) {
+			Object.assign(cssoutput, info);
+		};
+
+		var CheckEmptyAndNotify = function() {
+			if (cssleft)  return;
+
+			for (var x in jsqueue)
+			{
+				if (jsqueue.hasOwnProperty(x))  return;
+			}
+
+			DispatchEvent('done');
+		};
+
+		$this.LoadCSS = function(name, url, cssmedia) {
+			if (cssoutput[name] !== undefined)
+			{
+				CheckEmptyAndNotify();
+
+				return cssoutput[name];
+			}
+
+			if (version !== '')  url += (url.indexOf('?') > -1 ? '&' : '?') + version;
+
 			var tag = document.createElement('link');
+
+			tag._loaded = false;
+			tag.onload = function(e) {
+				tag._loaded = true;
+
+				cssleft--;
+				CheckEmptyAndNotify();
+			};
+
+			cssleft++;
+
 			tag.rel = 'stylesheet';
 			tag.type = 'text/css';
 			tag.href = url;
 			tag.media = (cssmedia != undefined ? cssmedia : 'all');
 
 			document.getElementsByTagName('head')[0].appendChild(tag);
-		}
 
-		$this.cssoutput[name] = true;
-	},
+			cssoutput[name] = tag;
 
-	jsqueue: {},
-
-	LoadJSQueueItem: function(name) {
-		var $this = this;
-
-		var done = false;
-		var s = document.createElement('script');
-
-		$this.jsqueue[name].loading = true;
-		$this.jsqueue[name].retriesleft = $this.jsqueue[name].retriesleft || 3;
-
-		s.onload = function() {
-			if (!done)  { done = true;  delete $this.jsqueue[name];  $this.ProcessJSQueue.call(window.FlexForms); }
+			return tag;
 		};
 
-		s.onreadystatechange = function() {
-			if (!done && s.readyState === 'complete')  { done = true;  delete $this.jsqueue[name];  $this.ProcessJSQueue.call(window.FlexForms); }
-		};
-
-		s.onerror = function() {
-			if (!done)
+		$this.AddCSS = function(name, css, cssmedia) {
+			if (cssoutput[name] !== undefined)
 			{
-				done = true;
+				CheckEmptyAndNotify();
 
-				$this.jsqueue[name].retriesleft--;
-				if ($this.jsqueue[name].retriesleft > 0)
-				{
-					$this.jsqueue[name].loading = false;
-
-					setTimeout(function() { $this.ProcessJSQueue.call(window.FlexForms) }, 250);
-				}
+				return cssoutput[name];
 			}
+
+			var tag = document.createElement('style');
+			tag.type = 'text/css';
+			tag.media = (cssmedia != undefined ? cssmedia : 'all');
+
+			document.getElementsByTagName('head')[0].appendChild(tag);
+
+			if (tag.styleSheet)  tag.styleSheet.cssText = css;
+			else  tag.appendChild(document.createTextNode(css));
+
+			tag._loaded = true;
+
+			cssoutput[name] = tag;
+
+			CheckEmptyAndNotify();
+
+			return tag;
 		};
 
-		s.src = $this.jsqueue[name].src + ($this.version === '' ? '' : ($this.jsqueue[name].src.indexOf('?') > -1 ? '&' : '?') + $this.version);
+		$this.AddJSQueueItem = function(name, info) {
+			jsqueue[name] = info;
+		};
 
-		document.body.appendChild(s);
-	},
+		var LoadJSQueueItem = function(name) {
+			var done = false;
+			var s = document.createElement('script');
 
-	ready: false,
+			jsqueue[name].loading = true;
+			jsqueue[name].retriesleft = jsqueue[name].retriesleft || 3;
 
-	GetObjectFromPath: function(path) {
-		var obj = window;
-		path = path.split('.');
-		for (var x = 0; x < path.length; x++)
-		{
-			if (obj[path[x]] === undefined)  return;
+			s.onload = function() {
+				if (!done)  { done = true;  delete jsqueue[name];  $this.ProcessJSQueue(); }
+			};
 
-			obj = obj[path[x]];
-		}
+			s.onreadystatechange = function() {
+				if (!done && s.readyState === 'complete')  { done = true;  delete jsqueue[name];  $this.ProcessJSQueue(); }
+			};
 
-		return obj;
-	},
-
-	ProcessJSQueue: function() {
-		var $this = this;
-
-		$this.ready = true;
-
-		for (var name in $this.jsqueue) {
-			if ($this.jsqueue.hasOwnProperty(name))
-			{
-				if (($this.jsqueue[name].loading === undefined || $this.jsqueue[name].loading === false) && ($this.jsqueue[name].dependency === false || $this.jsqueue[$this.jsqueue[name].dependency] === undefined))
+			s.onerror = function() {
+				if (!done)
 				{
-					if ($this.jsqueue[name].detect !== undefined && $this.GetObjectFromPath($this.jsqueue[name].detect) !== undefined)  delete $this.jsqueue[name];
-					else if ($this.jsqueue[name].mode === "src")  $this.LoadJSQueueItem(name);
-					else if ($this.jsqueue[name].mode === "inline")
-					{
-						$this.jsqueue[name].src();
+					done = true;
 
-						delete $this.jsqueue[name];
+					jsqueue[name].retriesleft--;
+					if (jsqueue[name].retriesleft > 0)
+					{
+						jsqueue[name].loading = false;
+
+						setTimeout($this.ProcessJSQueue, 250);
+					}
+				}
+			};
+
+			s.src = jsqueue[name].src + (version === '' ? '' : (jsqueue[name].src.indexOf('?') > -1 ? '&' : '?') + version);
+
+			document.body.appendChild(s);
+		};
+
+		$this.GetObjectFromPath = function(path) {
+			var obj = window;
+			path = path.split('.');
+			for (var x = 0; x < path.length; x++)
+			{
+				if (obj[path[x]] === undefined)  return;
+
+				obj = obj[path[x]];
+			}
+
+			return obj;
+		};
+
+		$this.ProcessJSQueue = function() {
+			ready = true;
+
+			for (var name in jsqueue) {
+				if (jsqueue.hasOwnProperty(name))
+				{
+					if ((jsqueue[name].loading === undefined || jsqueue[name].loading === false) && (jsqueue[name].dependency === false || jsqueue[jsqueue[name].dependency] === undefined))
+					{
+						if (jsqueue[name].detect !== undefined && $this.GetObjectFromPath(jsqueue[name].detect) !== undefined)  delete jsqueue[name];
+						else if (jsqueue[name].mode === "src")  LoadJSQueueItem(name);
+						else if (jsqueue[name].mode === "inline")
+						{
+							jsqueue[name].src();
+
+							delete jsqueue[name];
+						}
 					}
 				}
 			}
-		}
-	},
 
-	initialized: false,
+			CheckEmptyAndNotify();
+		};
 
-	Init: function() {
-		var $this = this;
-
-		if ($this.ready)  $this.ProcessJSQueue.call(window.FlexForms);
-		else if (!$this.initialized)
-		{
-			if (document.addEventListener)
+		$this.Init = function() {
+			if (ready)  $this.ProcessJSQueue();
+			else if (!initialized)
 			{
-				function regevent(event) {
-					document.removeEventListener("DOMContentLoaded", regevent, false);
+				if (document.addEventListener)
+				{
+					function regevent(event) {
+						document.removeEventListener("DOMContentLoaded", regevent);
 
-					$this.ProcessJSQueue.call(window.FlexForms);
+						$this.ProcessJSQueue();
+					}
+
+					document.addEventListener("DOMContentLoaded", regevent);
+				}
+				else
+				{
+					setTimeout($this.ProcessJSQueue(), 250);
 				}
 
-				document.addEventListener("DOMContentLoaded", regevent);
+				initialized = true;
 			}
-			else
-			{
-				setTimeout(function() { $this.ProcessJSQueue.call(window.FlexForms) }, 250);
-			}
+		};
+	};
 
-			$this.initialized = true;
-		}
-	}
-};
+	window.FlexForms = new FlexFormsInternal();
+})();
+
+FlexForms.SetVersion('<?php echo self::JSSafe($this->version); ?>');
 <?php
 			if ($scripttag)  echo "</script>\n";
 		}
@@ -1287,9 +1390,9 @@ window.FlexForms = window.FlexForms || {
 
 				foreach ($this->state["css"] as $name => $info)
 				{
-					if ($info["mode"] === "link" && ($info["dependency"] === false || !isset($this->state["css"][$info["dependency"]])))
+					if ($info["mode"] === "link" && ($info["dependency"] === false || isset($this->state["css"][$info["dependency"]])))
 					{
-						if ($this->state["ajax"])  echo "FlexForms.LoadCSS('" . self::JSSafe($info["src"]) . "'" . (isset($info["media"]) ? ", '" . self::JSSafe($info["media"]) . "'" : "") . ");\n";
+						if ($this->state["ajax"])  echo "FlexForms.LoadCSS('" . self::JSSafe($name) . "', '" . self::JSSafe($info["src"]) . "'" . (isset($info["media"]) ? ", '" . self::JSSafe($info["media"]) . "'" : "") . ");\n";
 						else
 						{
 							echo "<link rel=\"stylesheet\" href=\"" . htmlspecialchars($info["src"] . ($this->version !== "" ? (strpos($info["src"], "?") === false ? "?" : "&") . $this->version : "")) . "\" type=\"text/css\" media=\"" . (isset($info["media"]) ? $info["media"] : "all") . "\" />\n";
@@ -1305,7 +1408,7 @@ window.FlexForms = window.FlexForms || {
 				}
 			} while ($found);
 			if (!$this->state["ajax"])  echo "<script type=\"text/javascript\">\n";
-			echo "FlexForms.Extend(FlexForms.cssoutput, " . json_encode($this->state["cssoutput"], JSON_UNESCAPED_SLASHES | JSON_FORCE_OBJECT) . ");\n";
+			echo "FlexForms.RegisterCSSOutput(" . json_encode($this->state["cssoutput"], JSON_UNESCAPED_SLASHES | JSON_FORCE_OBJECT) . ");\n";
 			echo "</script>\n";
 			foreach ($this->state["css"] as $name => $info)
 			{
@@ -1329,7 +1432,7 @@ window.FlexForms = window.FlexForms || {
 						{
 							$info["loading"] = false;
 
-							if ($this->state["ajax"])  echo "FlexForms.jsqueue['" . self::JSSafe($name) . "'] = " . json_encode($info, JSON_UNESCAPED_SLASHES) . ";\n";
+							if ($this->state["ajax"])  echo "FlexForms.AddJSQueueItem('" . self::JSSafe($name) . "', " . json_encode($info, JSON_UNESCAPED_SLASHES) . ");\n";
 							else  echo "<script type=\"text/javascript\" src=\"" . htmlspecialchars($info["src"] . ($this->version !== "" ? (strpos($info["src"], "?") === false ? "?" : "&") . $this->version : "")) . "\"></script>\n";
 						}
 						else if ($info["mode"] === "inline")
@@ -1339,8 +1442,7 @@ window.FlexForms = window.FlexForms || {
 							{
 								$src = $info["src"];
 								unset($info["src"]);
-								echo "FlexForms.jsqueue['" . self::JSSafe($name) . "'] = " . json_encode($info, JSON_UNESCAPED_SLASHES) . ";\n";
-								echo "FlexForms.jsqueue['" . self::JSSafe($name) . "'].src = function() {\n" . $src . "};\n";
+								echo "FlexForms.AddJSQueueItem('" . self::JSSafe($name) . "', Object.assign(" . json_encode($info, JSON_UNESCAPED_SLASHES) . ", { src: function() {\n" . $src . "} }));\n";
 							}
 						}
 
@@ -1363,7 +1465,7 @@ window.FlexForms = window.FlexForms || {
 			// Initialize FlexForms (only needed for any AJAX bits).
 ?>
 <script type="text/javascript">
-FlexForms.Init.call(FlexForms);
+FlexForms.Init();
 </script>
 <?php
 		}
