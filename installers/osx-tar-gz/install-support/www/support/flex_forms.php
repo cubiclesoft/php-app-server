@@ -1390,7 +1390,7 @@ FlexForms.SetVersion('<?php echo self::JSSafe($this->version); ?>');
 
 				foreach ($this->state["css"] as $name => $info)
 				{
-					if ($info["mode"] === "link" && ($info["dependency"] === false || isset($this->state["css"][$info["dependency"]])))
+					if ($info["mode"] === "link" && ($info["dependency"] === false || !isset($this->state["css"][$info["dependency"]])))
 					{
 						if ($this->state["ajax"])  echo "FlexForms.LoadCSS('" . self::JSSafe($name) . "', '" . self::JSSafe($info["src"]) . "'" . (isset($info["media"]) ? ", '" . self::JSSafe($info["media"]) . "'" : "") . ");\n";
 						else
