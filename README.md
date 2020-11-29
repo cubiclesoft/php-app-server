@@ -11,7 +11,7 @@ What can be created with PHP App Server are real, installable software applicati
 
 PHP App Server is a fully-featured and extensible web server written in PHP with custom features specially designed to be used in a traditional desktop OS environment.  When the user runs the software via their Start menu, application launcher, etc., the software starts the server and then launches the user's preferred web browser to access the application.  PHP powers the backend while the web browser handles all the nitty-gritty details of displaying the user interface.  The ready-made installer scripts simplify the process of creating final release packages for delivery to your user's computer systems.
 
-[![Donate](https://cubiclesoft.com/res/donate-shield.png)](https://cubiclesoft.com/donate/)
+[![Donate](https://cubiclesoft.com/res/donate-shield.png)](https://cubiclesoft.com/donate/) [![Discord](https://img.shields.io/discord/777282089980526602?label=chat&logo=discord)](https://cubiclesoft.com/product-support/github/)
 
 Features
 --------
