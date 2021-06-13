@@ -68,6 +68,8 @@
 	// Load MIME types.
 	$mimetypemap = json_decode(file_get_contents($rootpath . "/support/mime_types.json"), true);
 
+	if (isset($args["opts"]["quit"]) && $args["opts"]["quit"] > 0 && $args["opts"]["quit"] < 60)  $args["opts"]["quit"] = 60;
+
 	// Load all server extensions.
 	if (isset($args["opts"]["exts"]))  $extspath = $args["opts"]["exts"];
 	else  $extspath = $rootpath . "/extensions";
@@ -1077,6 +1079,7 @@
 								if ($name === "status" && (int)$val >= 200)  $client->SetResponseCode((int)$val);
 								else if ($name === "content-length" && (int)$val >= 0)  $client->SetResponseContentLength((int)$val);
 								else if ($name === "content-type")  $client->AddResponseHeader("Content-Type", $val, true);
+								else if ($name === "x-exit-app")  $args["opts"]["quit"] = (int)$val;
 								else  $client->AddResponseHeader(HTTP::HeaderNameCleanup($name), $val);
 							}
 
@@ -1182,6 +1185,7 @@
 									if ($name === "status" && (int)$val >= 200)  $client->SetResponseCode((int)$val);
 									else if ($name === "content-length" && (int)$val >= 0)  $client->SetResponseContentLength((int)$val);
 									else if ($name === "content-type")  $client->AddResponseHeader("Content-Type", $val, true);
+									else if ($name === "x-exit-app")  $args["opts"]["quit"] = (int)$val;
 									else  $client->AddResponseHeader(HTTP::HeaderNameCleanup($name), $val);
 								}
 
@@ -1458,9 +1462,9 @@
 		}
 
 		// Automatically quit the server at the configured time (if any).
-		if (isset($args["opts"]["quit"]) && $args["opts"]["quit"] >= 60)
+		if (isset($args["opts"]["quit"]) && $args["opts"]["quit"] > 0)
 		{
-			if ($webserver->NumClients() || $wsserver->NumClients())  $lastclient = microtime(true);
+			if ($wsserver->NumClients() || count($cgis) || count($fcgis))  $lastclient = microtime(true);
 			else if ($lastclient < microtime(true) - (int)$args["opts"]["quit"])  $running = false;
 		}
 

@@ -357,20 +357,70 @@ The variables available to normal PHP scripts are also available to extensions v
 
 Always use the `ProcessHelper::StartProcess()` static function when starting external, long-running processes inside an extension.  The [ProcessHelper](https://github.com/cubiclesoft/php-misc/blob/master/docs/process_helper.md) class is designed to start non-blocking processes in the background across all platforms.  Note that the preferred way to start long-running processes is to use the long-running processes extension.
 
+Server Termination
+------------------
+
+For certain tasks, it is important to tell PHP App Server to exit.  For example, when upgrading a PHP App Server application on Windows, PHP itself needs to be updated and therefore can't be running during the upgrade.  It's also generally good behavior to exit an application not too long after the last browser tab is closed.
+
+There are two available methods for triggering early termination of the server:
+
+* Use the Exit App extension.  To use it, have the web browser establish a WebSocket connection to `/exit-app/` and send a valid `authtoken` and a `delay` in a JSON object that specifies the number of seconds to wait to terminate the server.  Once used, every page of the app must connect to `/exit-app/` to keep the server alive.  A minimum delay of 3 seconds is recommended.  Web browsers tend to drop WebSocket connections as soon as they leave the page or the tab is closed.
+* Send a `X-Exit-App` header in the response of a PHP script.  The value of the header is the integer number of seconds to wait to terminate the server.  A minimum delay of 3 seconds is recommended.  This special header is not passed to the web browser but handled internally.
+
+Example PHP code for the Exit App extension method:
+
+```php
+<script type="text/javascript">
+// NOTE:  Always put WebSocket class instances in a Javascript closure like this one to limit the XSRF attack surface.
+(function() {
+	function InitExitApp()
+	{
+		var ws = new WebSocket((window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/exit-app/');
+
+		ws.addEventListener('open', function(e) {
+			var msg = {
+				authtoken: '<?=hash_hmac("sha256", "/exit-app/", $_SERVER["PAS_SECRET"])?>',
+				delay: 3
+			};
+
+			ws.send(JSON.stringify(msg));
+		});
+
+		ws.addEventListener('close', function(e) {
+			setTimeout(InitExitApp, 500);
+		});
+	}
+
+	InitExitApp();
+})();
+</script>
+```
+
+Example PHP code for the header method:
+
+```php
+<?php
+	// User clicked an "Exit application" link or something.
+	header("X-Exit-App: 3");
+?>
+```
+
+The extension is a more reliable method of detecting that all browser tabs to the application have been closed.  However, if the application is unable to support the extension for some reason, then use the header method instead.  The header method is best used on pages where it makes sense (e.g. a page with upgrade information).
+
 Pre-Installer Tasks
 -------------------
 
-Before running the various scripts that generate installer packages, various files need to be created, renamed, and/or modified.  Every file that starts with "yourapp" needs to be renamed to your application name, preferably restricted to all lowercase a-z and hyphens.  This is done so that updates to the software don't accidentally overwrite your work and so that any nosy users poking around the directory structure see the application's actual name instead of "yourapp".
+Before running the various scripts that generate installer packages, various files need to be created, renamed, and/or modified.  Every file that starts with "yourapp" needs to be renamed to your application name, preferably restricted to all lowercase a-z and hyphens.  This needs to be done so that updates to the software don't accidentally overwrite your work and so that any nosy users poking around the directory structure see the application's actual name instead of "yourapp".
 
 * yourapp.png - A 512x512 pixel PNG image containing your application icon.  It should be fairly easy to tell what the icon represents when shrunk to 24x24 pixels.  The default icon works for testing but should be replaced with your own icon before deploying.
-* yourapp.ico - A Windows .ico file containing your application icon at as many resolutions and sizes as possible.  The default icon works for testing but should be replaced with your own icon before deploying.
+* yourapp.ico - This file can be deleted.  It's only included to have a higher quality default ICO file.  See the Windows EXE packaging instructions for more details.
 * yourapp.phpapp - This file needs to be modified.  More on this file in a moment.
-* yourapp-license.txt - Replace the text within with an actual End User License Agreement (EULA) written and approved by a real lawyer.
+* yourapp-license.txt - Replace the text in the file with an actual End User License Agreement (EULA) that's been written and approved by a real lawyer.
 
 The 'yourapp.phpapp' file is a PHP file that performs the actual application startup sequence of starting the web server (server.php) and then launching the user's web browser.  There is an `$options` array in the file that should be modified for your application's needs:
 
-* business - A string containing your business or your name (Default is "CubicleSoft", which is probably not really what is desired).  Shown under some OSes when displaying a program listing - notably Linux.
-* appname - A boolean of false or a string containing your application's name (Default is false, which attempts to automatically determine the app's name based on the directory it is installed in).  Shown under some OSes when displaying a program listing - notably Linux.
+* business - A string containing your business or your name (Default is "Your Business or Name").  Shown under some OSes when displaying a program listing - notably Linux.
+* appname - A boolean of false or a string containing your application's name (Default is "Your App").  When a boolean of false, the code attempts to automatically determine the app's name based on the directory it is installed in.  This string is shown under some OSes when displaying a program listing - notably Linux.
 * home - An optional string containing the directory to use as the "home" directory.  Could be useful for implementing a "portable" version of the application.
 * host - A string containing the IP address to bind to (Default is "127.0.0.1").  In general, don't change this.
 * port - An integer containing the port number to bind to (Default is 0, which selects a random port number).  In general, don't change this.
