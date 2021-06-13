@@ -18,8 +18,8 @@
 
 	// App and server options.  Change these as desired.  Port 0 is the default to dynamically assign an available port.
 	$options = array(
-		"business" => "CubicleSoft",
-		"appname" => false,
+		"business" => "Your Business or Name",
+		"appname" => "Your App",
 		"host" => "127.0.0.1",
 		"port" => 0,
 		"quitdelay" => 6
