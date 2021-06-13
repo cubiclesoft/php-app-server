@@ -163,6 +163,18 @@
 			"dir" => $rootpath
 		);
 
+		// Allow the Windows installer to detect that the software is still running.
+		if ($windows)
+		{
+			$options2["createprocess_exe_opts"] = "/f=SW_HIDE /f=DETACHED_PROCESS";
+
+			$winmutex = array();
+			if (isset($options["business"]) && is_string($options["business"]))  $winmutex[] = $options["business"];
+			if (isset($options["appname"]) && is_string($options["appname"]))  $winmutex[] = $options["appname"];
+
+			if (count($winmutex))  $options2["createprocess_exe_opts"] .= " " . escapeshellarg("/mutex=" . str_replace(",", "_", implode("_", $winmutex)));
+		}
+
 		$result = ProcessHelper::StartProcess($cmd, $options2);
 //var_dump($result);
 		if (!$result["success"])
