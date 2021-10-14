@@ -1,6 +1,6 @@
 <?php
 	// CubicleSoft PHP UTF (Unicode) utility functions.
-	// (C) 2019 CubicleSoft.  All Rights Reserved.
+	// (C) 2021 CubicleSoft.  All Rights Reserved.
 
 	class UTFUtils
 	{
@@ -326,6 +326,234 @@
 			}
 
 			return $result;
+		}
+
+
+		protected const PUNYCODE_BASE = 36;
+		protected const PUNYCODE_TMIN = 1;
+		protected const PUNYCODE_TMAX = 26;
+		protected const PUNYCODE_SKEW = 38;
+		protected const PUNYCODE_DAMP = 700;
+		protected const PUNYCODE_INITIAL_BIAS = 72;
+		protected const PUNYCODE_INITIAL_N = 0x80;
+		protected const PUNYCODE_DIGIT_MAP = "abcdefghijklmnopqrstuvwxyz0123456789";
+
+		public static function ConvertToPunycode($domain)
+		{
+			// Reject invalid domain name lengths.
+			if (strlen($domain) > 255)  return false;
+
+			$parts = explode(".", $domain);
+
+			foreach ($parts as $num => $part)
+			{
+				// Reject invalid label lengths.
+				$y = strlen($part);
+				if ($y > 63)  return false;
+
+				// Skip already encoded portions.
+				if (substr($part, 0, 4) === "xn--")  continue;
+
+				// Convert UTF-8 to UTF-32 code points.
+				$data = self::Convert($part, self::UTF8, self::UTF32_ARRAY);
+
+				// Handle ASCII code points.
+				$part2 = "";
+				foreach ($data as $cp)
+				{
+					if ($cp <= 0x7F)  $part2 .= strtolower(chr($cp));
+				}
+
+				$numhandled = strlen($part2);
+				$y = count($data);
+
+				if ($numhandled >= $y)
+				{
+					$parts[$num] = $part2;
+
+					continue;
+				}
+
+				if ($numhandled)  $part2 .= "-";
+
+				$part2 = "xn--" . $part2;
+
+				if (strlen($part2) > 63)  return false;
+
+				$bias = self::PUNYCODE_INITIAL_BIAS;
+				$n = self::PUNYCODE_INITIAL_N;
+				$delta = 0;
+				$first = true;
+
+				while ($numhandled < $y)
+				{
+					// Find the next largest unhandled code point.
+					$cp2 = 0x01000000;
+					foreach ($data as $cp)
+					{
+						if ($cp >= $n && $cp2 > $cp)  $cp2 = $cp;
+					}
+
+					// Increase delta but prevent overflow.
+					$delta += ($cp2 - $n) * ($numhandled + 1);
+					if ($delta < 0)  return false;
+					$n = $cp2;
+
+					foreach ($data as $cp)
+					{
+						if ($cp < $n)
+						{
+							$delta++;
+
+							if ($delta < 0)  return false;
+						}
+						else if ($cp === $n)
+						{
+							// Calculate and encode a variable length integer from the delta.
+							$q = $delta;
+							$x = 0;
+							do
+							{
+								$x += self::PUNYCODE_BASE;
+
+								if ($x <= $bias)  $t = self::PUNYCODE_TMIN;
+								else if ($x >= $bias + self::PUNYCODE_TMAX)  $t = self::PUNYCODE_TMAX;
+								else  $t = $x - $bias;
+
+								if ($q < $t)  break;
+
+								$part2 .= self::PUNYCODE_DIGIT_MAP[$t + (($q - $t) % (self::PUNYCODE_BASE - $t))];
+
+								$q = (int)(($q - $t) / (self::PUNYCODE_BASE - $t));
+
+								if (strlen($part2) > 63)  return false;
+							} while (1);
+
+							$part2 .= self::PUNYCODE_DIGIT_MAP[$q];
+							if (strlen($part2) > 63)  return false;
+
+							// Adapt bias.
+							$numhandled++;
+							$bias = self::InternalPunycodeAdapt($delta, $numhandled, $first);
+							$delta = 0;
+							$first = false;
+						}
+					}
+
+					$delta++;
+					$n++;
+				}
+
+				$parts[$num] = $part2;
+			}
+
+			return implode(".", $parts);
+		}
+
+		public static function ConvertFromPunycode($domain)
+		{
+			// Reject invalid domain name lengths.
+			if (strlen($domain) > 255)  return false;
+
+			$parts = explode(".", $domain);
+
+			foreach ($parts as $num => $part)
+			{
+				// Reject invalid label lengths.
+				$y = strlen($part);
+				if ($y > 63)  return false;
+
+				// Skip unencoded portions.
+				if (substr($part, 0, 4) !== "xn--")  continue;
+
+				$part = substr($part, 4);
+
+				// Convert UTF-8 to UTF-32 code points.
+				$data = self::Convert($part, self::UTF8, self::UTF32_ARRAY);
+
+				// Handle ASCII code points.
+				$hyphen = ord("-");
+				for ($x = count($data); $x && $data[$x - 1] !== $hyphen; $x--);
+				if (!$x)  $data2 = array();
+				else
+				{
+					$data2 = array_splice($data, 0, $x - 1);
+
+					array_shift($data);
+				}
+
+				$numhandled = count($data2);
+
+				$bias = self::PUNYCODE_INITIAL_BIAS;
+				$n = self::PUNYCODE_INITIAL_N;
+				$delta = 0;
+				$first = true;
+
+				$pos = 0;
+				$y = count($data);
+				while ($pos < $y)
+				{
+					// Calculate and decode a delta from the variable length integer.
+					$olddelta = $delta;
+					$w = 1;
+					$x = 0;
+					do
+					{
+						$x += self::PUNYCODE_BASE;
+
+						$cp = $data[$pos];
+						$pos++;
+
+						if ($cp >= ord("a") && $cp <= ord("z"))  $digit = $cp - ord("a");
+						else if ($cp >= ord("A") && $cp <= ord("Z"))  $digit = $cp - ord("A");
+						else if ($cp >= ord("0") && $cp <= ord("9"))  $digit = $cp - ord("0") + 26;
+						else  return false;
+
+						$delta += $digit * $w;
+						if ($delta < 0)  return false;
+
+						if ($x <= $bias)  $t = self::PUNYCODE_TMIN;
+						else if ($x >= $bias + self::PUNYCODE_TMAX)  $t = self::PUNYCODE_TMAX;
+						else  $t = $x - $bias;
+
+						if ($digit < $t)  break;
+
+						$w *= (self::PUNYCODE_BASE - $t);
+						if ($w < 0)  return false;
+					} while (1);
+
+					// Adapt bias.
+					$numhandled++;
+					$bias = self::InternalPunycodeAdapt($delta - $olddelta, $numhandled, $first);
+					$first = false;
+
+					// Delta was supposed to wrap around from $numhandled to 0, incrementing $n each time, so fix that now.
+					$n += (int)($delta / $numhandled);
+					$delta %= $numhandled;
+
+					// Insert $n (the code point) at the delta position.
+					array_splice($data2, $delta, 0, array($n));
+					$delta++;
+				}
+
+				$parts[$num] = self::Convert($data2, self::UTF32_ARRAY, self::UTF8);
+			}
+
+			return implode(".", $parts);
+		}
+
+		// RFC3492 adapt() function.
+		protected static function InternalPunycodeAdapt($delta, $numpoints, $first)
+		{
+			$delta = ($first ? (int)($delta / self::PUNYCODE_DAMP) : $delta >> 1);
+			$delta += (int)($delta / $numpoints);
+
+			$y = self::PUNYCODE_BASE - self::PUNYCODE_TMIN;
+
+			$condval = (int)(($y * self::PUNYCODE_TMAX) / 2);
+			for ($x = 0; $delta > $condval; $x += self::PUNYCODE_BASE)  $delta = (int)($delta / $y);
+
+			return (int)($x + ((($y + 1) * $delta) / ($delta + self::PUNYCODE_SKEW)));
 		}
 	}
 ?>

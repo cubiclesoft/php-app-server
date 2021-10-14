@@ -494,6 +494,11 @@
 			return array("success" => true, "proc" => $proc, "pid" => $pinfo["pid"], "pipes" => $pipes, "info" => array("cmd" => $cmd, "dir" => (isset($options["dir"]) ? $options["dir"] : NULL), "env" => $options["env"]));
 		}
 
+		public static function DisplayAllOutput($str)
+		{
+			echo $str;
+		}
+
 		public static function Wait($proc, &$pipes, $stdindata = "", $timeout = -1, $outputcallback = false)
 		{
 			$stdindata = (string)$stdindata;
@@ -501,6 +506,8 @@
 			$stdoutpos = 0;
 			$stderrdata = "";
 			$stderrpos = 0;
+
+			if ($outputcallback === true)  $outputcallback = __CLASS__ . "::DisplayAllOutput";
 
 			$startts = microtime(true);
 			do
