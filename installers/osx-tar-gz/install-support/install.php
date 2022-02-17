@@ -61,7 +61,7 @@
 		"appname" => $packageinfo["app_name"],
 		"host" => "127.0.0.1",
 		"port" => 0,
-		"quitdelay" => 6,
+		"quitdelay" => 60,
 		"exts" => $rootpath . "/extensions",
 		"www" => $rootpath . "/www"
 	);

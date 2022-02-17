@@ -1,6 +1,6 @@
 <?php
 	// Main installer for Mac OSX.
-	// (C) 2019 CubicleSoft.  All Rights Reserved.
+	// (C) 2022 CubicleSoft.  All Rights Reserved.
 
 	require_once "support/str_basics.php";
 	require_once "support/flex_forms.php";
@@ -107,8 +107,8 @@
 <?php
 		$ff->OutputJQuery();
 
-		// Connect with a WebSocket to the exit-app extension and set the delay to three seconds.
-		// All connections have to drop for three seconds before the server automatically exits.
+		// Connect with a WebSocket to the exit-app extension and set the delay to a few seconds.
+		// All connections have to drop for the timeout period before the server automatically exits.
 ?>
 <script type="text/javascript">
 function InitExitApp()
@@ -118,7 +118,7 @@ function InitExitApp()
 	ws.addEventListener('open', function(e) {
 		var msg = {
 			authtoken: '<?=hash_hmac("sha256", "/exit-app/", $_SERVER["PAS_SECRET"])?>',
-			delay: 3
+			delay: 5
 		};
 
 		ws.send(JSON.stringify(msg));
@@ -190,6 +190,8 @@ InitExitApp();
 				if ($_REQUEST["scope"] === "all_users")
 				{
 					$installpath = "/Applications/" . $packageinfo["app_name"] . ".app";
+
+					$allusers = true;
 				}
 				else
 				{
@@ -203,21 +205,23 @@ InitExitApp();
 					@chmod($installpath, 0700);
 
 					$installpath .= "/" . $packageinfo["app_name"] . ".app";
+
+					$allusers = false;
 				}
 
 				DirHelper::Delete($installpath);
-				@mkdir($installpath, ($admin ? 0755 : 0700));
-				@chmod($installpath, ($admin ? 0755 : 0700));
+				@mkdir($installpath, ($allusers ? 0755 : 0700));
+				@chmod($installpath, ($allusers ? 0755 : 0700));
 
 				DirHelper::Copy($basepath, $installpath);
-				DirHelper::SetPermissions($installpath, false, false, ($admin ? 0755 : 0700), false, false, ($admin ? 0644 : 0600));
+				DirHelper::SetPermissions($installpath, false, false, ($allusers ? 0755 : 0700), false, false, ($allusers ? 0644 : 0600));
 
 				// Modify the .phpapp file.
 				$filename = $installpath . "/Contents/MacOS/" . $appname . ".phpapp";
 				$data = file_get_contents($filename);
 				$data = "#!" . $phpbin . "\n" . $data;
 				file_put_contents($filename, $data);
-				chmod($filename, ($admin ? 0755 : 0700));
+				chmod($filename, ($allusers ? 0755 : 0700));
 
 				// Remove quarantine so that the user isn't annoyed at having to approve another app.
 				system("xattr -r -d com.apple.quarantine " . escapeshellarg($installpath));
