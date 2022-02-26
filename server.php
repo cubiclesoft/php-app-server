@@ -1,6 +1,6 @@
 <?php
 	// PHP App Server.
-	// (C) 2021 CubicleSoft.  All Rights Reserved.
+	// (C) 2019 CubicleSoft.  All Rights Reserved.
 
 	if (!isset($_SERVER["argc"]) || !$_SERVER["argc"])
 	{
@@ -225,6 +225,7 @@
 			{
 				foreach ($client->appdata["cgi"]["pipes"] as $fp)  fclose($fp);
 
+				proc_terminate($client->appdata["cgi"]["proc"]);
 				proc_close($client->appdata["cgi"]["proc"]);
 
 				if (trim($client->appdata["cgi"]["stderr"]) !== "")
