@@ -1,6 +1,6 @@
 <?php
 	// Directory helper functions.
-	// (C) 2018 CubicleSoft.  All Rights Reserved.
+	// (C) 2022 CubicleSoft.  All Rights Reserved.
 
 	class DirHelper
 	{
@@ -68,11 +68,35 @@
 		{
 			$path = rtrim(str_replace("\\", "/", $path), "/");
 
+			if (is_string($dirowner))
+			{
+				$dirowner = (function_exists("posix_getpwnam") ? @posix_getpwnam($dirowner) : false);
+				if ($dirowner !== false)  $dirowner = $dirowner["uid"];
+			}
+
+			if (is_string($dirgroup))
+			{
+				$dirgroup = (function_exists("posix_getgrnam") ? @posix_getgrnam($dirgroup) : false);
+				if ($dirgroup !== false)  $dirgroup = $dirgroup["gid"];
+			}
+
+			if (is_string($fileowner))
+			{
+				$fileowner = (function_exists("posix_getpwnam") ? @posix_getpwnam($fileowner) : false);
+				if ($fileowner !== false)  $fileowner = $fileowner["uid"];
+			}
+
+			if (is_string($filegroup))
+			{
+				$filegroup = (function_exists("posix_getgrnam") ? @posix_getgrnam($filegroup) : false);
+				if ($filegroup !== false)  $filegroup = $filegroup["gid"];
+			}
+
 			if (!isset($exclude[$path]))
 			{
-				if ($dirowner !== false)  @chown($path, $dirowner);
-				if ($dirgroup !== false)  @chgrp($path, $dirgroup);
-				if ($dirperms !== false)  @chmod($path, $dirperms);
+				if ($dirowner !== false && @fileowner($path) !== $dirownwer)  @chown($path, $dirowner);
+				if ($dirgroup !== false && @filegroup($path) !== $dirgroup)  @chgrp($path, $dirgroup);
+				if ($dirperms !== false && @fileperms($path) & 07777 !== $dirperms)  @chmod($path, $dirperms);
 			}
 
 			$dir = @opendir($path);
@@ -88,9 +112,9 @@
 						}
 						else
 						{
-							if ($fileowner !== false)  @chown($path . "/" . $file, $fileowner);
-							if ($filegroup !== false)  @chgrp($path . "/" . $file, $filegroup);
-							if ($fileperms !== false)  @chmod($path . "/" . $file, $fileperms);
+							if ($fileowner !== false && @fileowner($path . "/" . $file) !== $fileowner)  @chown($path . "/" . $file, $fileowner);
+							if ($filegroup !== false && @filegroup($path . "/" . $file) !== $filegroup)  @chgrp($path . "/" . $file, $filegroup);
+							if ($fileperms !== false && @fileperms($path . "/" . $file) & 07777 !== $fileperms)  @chmod($path . "/" . $file, $fileperms);
 						}
 					}
 				}
