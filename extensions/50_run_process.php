@@ -216,7 +216,7 @@
 
 				// Handle stdout and stderr.
 				$streams = false;
-				if (isset($info["pipes"][1]) && $info["stdoutdata"] < 65536)
+				if (isset($info["pipes"][1]) && strlen($info["stdoutdata"]) < 65536)
 				{
 					$data = fread($info["pipes"][1], 65536);
 					if ($data === false || ($data === "" && feof($info["pipes"][1])))
@@ -234,7 +234,7 @@
 					}
 				}
 
-				if (isset($info["pipes"][2]) && $info["stderrdata"] < 65536)
+				if (isset($info["pipes"][2]) && strlen($info["stderrdata"]) < 65536)
 				{
 					$data = fread($info["pipes"][2], 65536);
 					if ($data === false || ($data === "" && feof($info["pipes"][2])))
@@ -258,8 +258,8 @@
 					}
 				}
 
-				if (isset($info["pipes"][1]) && $info["stdoutdata"] < 65536)  $readfps[$prefix . $cid . "_o"] = $info["pipes"][1];
-				if (isset($info["pipes"][2]) && $info["stderrdata"] < 65536)  $readfps[$prefix . $cid . "_e"] = $info["pipes"][2];
+				if (isset($info["pipes"][1]) && strlen($info["stdoutdata"]) < 65536)  $readfps[$prefix . $cid . "_o"] = $info["pipes"][1];
+				if (isset($info["pipes"][2]) && strlen($info["stderrdata"]) < 65536)  $readfps[$prefix . $cid . "_e"] = $info["pipes"][2];
 
 				$ws = false;
 				if ($info["attached"] !== false)
@@ -1177,7 +1177,7 @@
 			// Attempt to gracefully shutdown running processes.
 			foreach ($this->processes as $cid => &$info)
 			{
-				if ($info["state"] !== "running")  unset($this->processes[$id]);
+				if ($info["state"] !== "running")  unset($this->processes[$cid]);
 				else
 				{
 					$info["attached"] = false;
