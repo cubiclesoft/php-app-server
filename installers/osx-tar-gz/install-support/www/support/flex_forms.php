@@ -660,6 +660,12 @@
 			{
 				// Do nothing if type is not specified.
 			}
+			else if ($field["type"] == "hidden")
+			{
+?>
+				<input type="hidden" id="<?php echo htmlspecialchars($id); ?>" name="<?php echo htmlspecialchars($field["name"]); ?>" value="<?php echo htmlspecialchars($field["value"]); ?>" />
+<?php
+			}
 			else if (isset($this->state["customfieldtypes"][$field["type"]]))
 			{
 				// Output custom fields.
@@ -743,19 +749,11 @@
 						break;
 					}
 					case "text":
-					{
-?>
-			<div class="formitemdata">
-				<div class="textitemwrap"<?php if (isset($field["width"]))  echo " style=\"" . ($this->state["responsive"] ? "max-" : "") . "width: " . htmlspecialchars($field["width"]) . ";\""; ?>><input class="text" type="text" id="<?php echo htmlspecialchars($id); ?>" name="<?php echo htmlspecialchars($field["name"]); ?>" value="<?php echo htmlspecialchars($field["value"]); ?>"<?php if ($this->state["autofocused"] === $id)  echo " autofocus"; ?> /></div>
-			</div>
-<?php
-						break;
-					}
 					case "password":
 					{
 ?>
 			<div class="formitemdata">
-				<div class="textitemwrap"<?php if (isset($field["width"]))  echo " style=\"" . ($this->state["responsive"] ? "max-" : "") . "width: " . htmlspecialchars($field["width"]) . ";\""; ?>><input class="text" type="password" id="<?php echo htmlspecialchars($id); ?>" name="<?php echo htmlspecialchars($field["name"]); ?>" value="<?php echo htmlspecialchars($field["value"]); ?>"<?php if ($this->state["autofocused"] === $id)  echo " autofocus"; ?> /></div>
+				<div class="textitemwrap"<?php if (isset($field["width"]))  echo " style=\"" . ($this->state["responsive"] ? "max-" : "") . "width: " . htmlspecialchars($field["width"]) . ";\""; ?>><input class="text" type="<?php echo htmlspecialchars(isset($field["subtype"]) ? $field["subtype"] : $field["type"]); ?>" id="<?php echo htmlspecialchars($id); ?>" name="<?php echo htmlspecialchars($field["name"]); ?>" value="<?php echo htmlspecialchars($field["value"]); ?>"<?php if ($this->state["autofocused"] === $id)  echo " autofocus"; ?> /></div>
 			</div>
 <?php
 						break;
@@ -1113,9 +1111,10 @@
 			foreach ($options["submit"] as $name => $val)
 			{
 				if (is_int($name) && isset($options["submitname"]))  $name = $options["submitname"];
-?>
-				<input class="submit" type="submit"<?php if ($name !== "")  echo " name=\"" . htmlspecialchars(isset($options["hashnames"]) && $options["hashnames"] ? $this->GetHashedFieldName($name) : $name) . "\""; ?> value="<?php echo htmlspecialchars(self::FFTranslate($val)); ?>" />
-<?php
+
+				echo "<input class=\"submit\" type=\"submit\"";
+				if ($name !== "")  echo " name=\"" . htmlspecialchars(isset($options["hashnames"]) && $options["hashnames"] ? $this->GetHashedFieldName($name) : $name) . "\"";
+				echo " value=\"" . htmlspecialchars(self::FFTranslate($val)) . "\" />";
 			}
 ?>
 			</div>
